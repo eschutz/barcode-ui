@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkAdjustment" id="spin_button_adjustment">
+    <property name="lower">1</property>
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">5</property>
+    <property name="page-size">0</property>
+    <property name="value">1</property>
+  </object>
+  <template class="BarcodeWindow" parent="GtkApplicationWindow">
+    <property name="title" translatable="yes">Barcode Generator</property>
+    <property name="default-width">1280</property>
+    <property name="default-height">480</property>
+    <child>
+      <object class="GtkBox" id="content_box">
+        <property name="visible">True</property>
+        <property name="orientation">horizontal</property>
+        <property name="name">content_box</property>
+        <child>
+          <object class="GtkBox" id="barcode_entry_box">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+            <property name="name">barcode_entry_box</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="label">Barcodes</property>
+                <property name="visible">True</property>
+                <property name="justify">GTK_JUSTIFY_CENTER</property>
+              </object>
+              <packing>
+                <property name="padding">10</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="new_barcode_btn">
+                <property name="name">new_barcode_btn</property>
+                <property name="visible">True</property>
+                <property name="label">+</property>
+                <signal name="clicked" handler="new_barcode_btn_clicked"/>
+              </object>
+              <packing>
+                <property name="padding">5</property>
+              </packing>
+            </child>
+            <!-- <child> <object class="GtkBox" id="barcode_box_0"> <property name="visible">True</property> <property name="orientation">horizontal</property> <property name="name">barcode_box</property> <child> <object class="GtkEntry" id="barcode_entry_0">
+            <property name="visible">True</property> <property name="max-length">20</property> <property name="name">barcode_entry_0</property> <signal name="activate" handler="new_barcode_btn_clicked"/> </object> <packing> <property name="padding">5</property>
+            </packing> </child> <child> <object class="GtkSpinButton" id="barcode_num_0"> <property name="visible">True</property> <property name="numeric">True</property> <property name="climb-rate">1</property> <property name="digits">0</property> <property
+            name="snap-to-ticks">True</property> <property name="adjustment">spin_button_adjustment</property> <property name="name">barcode_num_0</property> <signal name="value-changed" handler="spin_button_handler"/> </object> <packing> <property
+            name="padding">5</property> </packing> </child> </object> </child> -->
+          </object>
+        </child>
+        <child>
+          <object class="GtkImage" id="print_preview">
+            <property name="visible">True</property>
+            <property name="file">/Users/Elijah/Documents/Programs/C/barcode-ui/src/ui/bc.png</property>
+            <property name="name">print_preview</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkFrame" id="settings_frame">
+            <property name="name">settings_frame</property>
+            <property name="visible">True</property>
+            <property name="valign">GTK_ALIGN_START</property>
+            <property name="hexpand">True</property>
+            <property name="hexpand-set">True</property>
+            <property name="label">Page Layout</property>
+            <property name="label-xalign">0.5</property>
+            <child>
+              <object class="GtkBox">
+                <property name="name">settings_box</property>
+                <property name="hexpand">True</property>
+                <property name="hexpand-set">True</property>
+                <property name="visible">True</property>
+                <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                <child>
+                  <object class="GtkFlowBox" id="barcode_layout_box">
+                    <property name="selection-mode">GTK_SELECTION_NONE</property>
+                    <property name="name">barcode_layout_box</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">rows_entry_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Rows</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="rows_entry">
+                            <property name="name">rows_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_DIGITS</property>
+                            <property name="max-length">2</property>
+                            <property name="placeholder-text">1</property>
+                            <signal name="changed" handler="rows_changed"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">cols_entry_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Columns</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="cols_entry">
+                            <property name="name">cols_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_DIGITS</property>
+                            <property name="max-length">2</property>
+                            <property name="placeholder-text">2</property>
+                            <signal name="changed" handler="cols_changed"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkSeparator">
+                    <property name="visible">True</property>
+                    <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkFlowBox" id="page_layout_box">
+                    <property name="selection-mode">GTK_SELECTION_NONE</property>
+                    <property name="name">page_layout_box</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">units_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Units</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText">
+                            <property name="name">units</property>
+                            <property name="visible">True</property>
+                            <items>
+                              <item translatable="yes" id="p">p</item>
+                              <item translatable="yes" id="mm">mm</item>
+                              <item translatable="yes" id="cm">cm</item>
+                              <item translatable="yes" id="in">in</item>
+                            </items>
+                            <signal name="changed" handler="units_changed"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">lmargin_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Left Margin</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="lmargin_entry">
+                            <property name="name">lmargin_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">6.35</property>
+                            <signal name="changed" handler="lmargin_changed"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">rmargin_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Right Margin</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="rmargin_entry">
+                            <signal name="changed" handler="rmargin_changed"/>
+                            <property name="name">rmargin_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">6.35</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">bmargin_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Bottom Margin</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="bmargin_entry">
+                            <signal name="changed" handler="bmargin_changed"/>
+                            <property name="name">bmargin_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">12.7</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">tmargin_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Top Margin</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="tmargin_entry">
+                            <signal name="changed" handler="tmargin_changed"/>
+                            <property name="name">tmargin_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">12.7</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">bar_width_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Bar Width</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="bar_width_entry">
+                            <signal name="changed" handler="bar_width_changed"/>
+                            <property name="name">bar_width_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">0.25</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">bar_height_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Bar Height</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="bar_height_entry">
+                            <signal name="changed" handler="bar_height_changed"/>
+                            <property name="name">bar_height_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">10</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">padding_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Padding</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="padding_entry">
+                            <signal name="changed" handler="padding_changed"/>
+                            <property name="name">padding_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">5</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">col_width_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Column Width</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="col_width_entry">
+                            <signal name="changed" handler="col_width_changed"/>
+                            <property name="name">col_width_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_NUMBER</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">94</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkFlowBox">
+                        <property name="selection-mode">GTK_SELECTION_NONE</property>
+                        <property name="name">fsize_box</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="label">Font Size</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="fsize_entry">
+                            <signal name="changed" handler="fsize_changed"/>
+                            <property name="name">fsize_entry</property>
+                            <property name="visible">True</property>
+                            <property name="input-purpose">GTK_INPUT_PURPOSE_DIGITS</property>
+                            <property name="max-length">5</property>
+                            <property name="placeholder-text">10</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+
+                  </object>
+                </child>
+              </object>
+            </child>
+
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
