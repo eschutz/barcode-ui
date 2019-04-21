@@ -21,14 +21,16 @@
  *      @date 3/3/19
  */
 
-#include "ui.h"
 #include "error.h"
+#include "ui.h"
 #include "util.h"
 #include <stdio.h>
 
 int main(int argc, char **argv) {
+    // GhostScript error messages are such that failure is < 0 (SUCCESS)
     if (ghostscript_init() < SUCCESS) {
-        exit(-1);
+        fprintf(stderr, "FATAL: Could not initialise GhostScript, exiting.");
+        exit(ERR_GENERIC);
     }
 
     return g_application_run(G_APPLICATION(barcode_app_new()), argc, argv);

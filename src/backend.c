@@ -1,16 +1,59 @@
+/****************************************************************************
+ * Copyright (C) 2019  Elijah Schutz
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ ****************************************************************************/
+/*
+ *      @file backend.c
+ *      @brief UI 'backend' function implementations relating to barcode generation
+ *      @author Elijah Schutz
+ *      @date 21/4/19
+ */
 
 #include "backend.h"
 #include "error.h"
-#include "util.h"
 #include "iapi.h"
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-// const char *BK_GHOSTSCRIPT_ARGV[] = { "gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m", "-dGraphicsAlphaBits=4" };
+// const char *BK_GHOSTSCRIPT_ARGV[] = { "gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m",
+// "-dGraphicsAlphaBits=4" };
 
-char* bk_generate_png(char barcodes[][BK_BARCODE_LENGTH], int quantities[], int num_barcodes, PSProperties * props, Layout * layout) {
+/**
+ *      @detail bk_generate_png() generates a temporary PNG file from a list of barcodes and
+ *              property structures and returns the image path.
+ *      @param barcodes A list of barcode strings to be encoded
+ *      @param quantities A list of barcode quantities (@c barcode[n] is drawn @c quantities[n]
+ *                        times)
+ *      @param num_barcodes The length of @c barcodes
+ *      @param props The PostScript properties to be used when generating the PostScript and image
+ *      @param layout The arrangement of rows and columns used to lay out the barcodes
+ *      @return The file path to a generated PNG image
+ */
+
+// clang-format off
+char* bk_generate_png(
+    char barcodes[][BK_BARCODE_LENGTH],
+    int quantities[],
+    int num_barcodes,
+    PSProperties * props,
+    Layout * layout
+) {
+// clang-format off
     /*
     Code128 **barcode_structs;
     int total_barcodes = 0;

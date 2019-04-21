@@ -24,10 +24,41 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#define SUCCESS 0
-#define ERR_WIDGET_NOT_FOUND 1
-#define ERR_NO_WIDGET_CHILDREN 2
-#define ERR_INVALID_STRING 3
-#define ERR_NULLPTR 4
+/**
+ *      @defgroup Errors Error numbers returned by functions
+ */
+/*@{*/
+// clang-format off
+#define SUCCESS                 0
+#define ERR_GENERIC             1
+#define ERR_WIDGET_NOT_FOUND    2
+#define ERR_NO_WIDGET_CHILDREN  3
+#define ERR_INVALID_STRING      4
+#define GHOSTSCRIPT_ERR_GENERIC -1
+/*@}*/
+
+// clang-format on
+/**
+ *      @brief Verify if a pointer is null (originally from libbarcode)
+ *      @detail If a null pointer is supplied, an error message is printed and the program exits.
+ *      @param var A pointer to check
+ *      @param n The size of the memory allocated to the pointer (used in the error message)
+ */
+// clang-format off
+#define VERIFY_NULL(var, n)                                                                     \
+    do {                                                                                        \
+        if (var == NULL) {                                                                      \
+            fprintf(                                                                            \
+                stderr,                                                                         \
+                "null pointer: could not allocate %d bytes for variable \"%s\" at %s:%d in %s", \
+                (int) n,                                                                        \
+                #var,                                                                           \
+                __FILE__,                                                                       \
+                __LINE__ - 8,                                       /* 8 lines up until there */\
+                __func__);                                                                      \
+            exit(-1);                                                                           \
+        }                                                                                       \
+    } while(0)                                                                                  \
+// clang-format on
 
 #endif
