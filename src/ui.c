@@ -74,7 +74,11 @@ static int barcode_entry_id = 0;
  *      @detail @c barcode_app_init is used for initialising the PostScript properties, page layout,
  *              and barcode quantities to their respective default values.
  */
-static void barcode_app_init(BarcodeApp *app) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+static void            barcode_app_init(BarcodeApp *app) {
+    atexit(ui_cleanup);
+
     ps_properties         = PS_DEFAULT_PROPS;
     barcode_quantities[0] = 1;
 
@@ -85,6 +89,8 @@ static void barcode_app_init(BarcodeApp *app) {
     page_layout->cols = DEFAULT_COLS;
     page_layout->rows = DEFAULT_ROWS;
 }
+
+#pragma GCC diagnostic pop
 
 /**
  *      @detail In @c barcode_app_activate, @c barcode_entry, @c settings_box, and @c print_preview
@@ -134,24 +140,16 @@ static void barcode_app_activate(GApplication *app) {
     gtk_window_present(GTK_WINDOW(win));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 static void barcode_app_open(GApplication *app, GFile **files, gint n_files, const gchar *hint) {
     barcode_app_activate(app);
 }
+#pragma GCC diagnostic pop
 
 static void barcode_app_class_init(BarcodeAppClass *class) {
     G_APPLICATION_CLASS(class)->activate = barcode_app_activate;
     G_APPLICATION_CLASS(class)->open     = barcode_app_open;
-}
-
-/**
- *      @detail On quit, free @c page_layout and shutdown ghostscript.
- */
-static void barcode_app_quit(GApplication *app) {
-    fprintf(stderr, "App quitting!\n");
-    free(page_layout);
-    if (ghostscript_exit(gs_instance) < SUCCESS) {
-        fprintf(stderr, "Error on exiting Ghostscript\n");
-    }
 }
 
 BarcodeApp *barcode_app_new(void) {
@@ -191,13 +189,20 @@ void refresh(void) {
     VERIFY_NULL(preview_path, preview_size);
 
     // bk_generate_png generates the print preview and returns its file path as a string
-    strncpy(preview_path,
-            bk_generate_png(new_barcodes, new_barcode_quantities, new_barcodes_num, &ps_properties,
-                            page_layout),
-            BK_TEMPFILE_TEMPLATE_LENGTH);
+    int status = bk_generate_png(
+        new_barcodes,
+        new_barcode_quantities,
+        new_barcodes_num,
+        &ps_properties,
+        page_layout,
+        preview_path
+    );
 
-    // Update the image widget with the new file path
-    gtk_image_set_from_file(GTK_IMAGE(print_preview), preview_path);
+    if (SUCCESS == status) {
+        // Update the image widget with the new file path
+        gtk_image_set_from_file(GTK_IMAGE(print_preview), preview_path);
+    }
+
     free(preview_path);
     /* Debugging
     fprintf(stderr, "Page Layout --\n");
@@ -216,6 +221,11 @@ void refresh(void) {
     fprintf(stderr, "       fontsize     : %.2d\n\n", ps_properties.fontsize);
     */
 }
+
+/* Ignore all unused parameter warnings, as the function signature must be accepted by GTK
+   regardless of whether we use all the parameters or not */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 /**
  *      @detail The function is called when the 'changed' event is emitted. The entry content needs
@@ -449,13 +459,16 @@ void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
 
     /* The following are ID strings for their respective widgets, and are set from format templates
        that contain the numerical ID */
-    char box_name[BARCODE_BOX_BUFSIZE], entry_name[BARCODE_ENTRY_BUFSIZE],
-        spin_name[BARCODE_SPIN_BUFSIZE];
+    // clang-format off
+    char box_name[BARCODE_BOX_BUFSIZE],
+         entry_name[BARCODE_ENTRY_BUFSIZE],
+         spin_name[BARCODE_SPIN_BUFSIZE];
+    // clang-format on
 
     // Filling the templates with the current barcode entry ID
-    snprintf(&box_name, BARCODE_BOX_BUFSIZE, BARCODE_BOX_NAME, barcode_entry_id);
-    snprintf(&entry_name, BARCODE_ENTRY_BUFSIZE, BARCODE_ENTRY_NAME, barcode_entry_id);
-    snprintf(&spin_name, BARCODE_SPIN_BUFSIZE, BARCODE_SPIN_NAME, barcode_entry_id);
+    snprintf(box_name, BARCODE_BOX_BUFSIZE, BARCODE_BOX_NAME, barcode_entry_id);
+    snprintf(entry_name, BARCODE_ENTRY_BUFSIZE, BARCODE_ENTRY_NAME, barcode_entry_id);
+    snprintf(spin_name, BARCODE_SPIN_BUFSIZE, BARCODE_SPIN_NAME, barcode_entry_id);
 
     /* Creation of GTK widgets that make up the barcode entry box */
     barcode_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, BARCODE_BOX_SPACING);
@@ -466,8 +479,14 @@ void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
     gtk_entry_set_max_length(GTK_ENTRY(new_entry), BARCODE_ENTRY_MAX_LENGTH);
     // Connect event callbacks
     g_signal_connect(new_entry, "activate", G_CALLBACK(new_barcode_btn_clicked), NULL);
-    g_signal_connect(new_entry, "focus-out-event", G_CALLBACK(barcode_entry_focus_out),
-                     &barcode_entry_id);
+    // clang-format off
+    g_signal_connect(
+        new_entry,
+        "focus-out-event",
+        G_CALLBACK(barcode_entry_focus_out),
+        &barcode_entry_id
+    );
+    // clang-format on
 
     // clang-format off
     adjustment = gtk_adjustment_new(
@@ -524,4 +543,10 @@ void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
     gtk_widget_show_all(barcode_box);
 
     barcode_entry_id++;
+}
+
+#pragma GCC diagnostic pop
+
+void ui_cleanup(void) {
+    free(page_layout);
 }

@@ -50,6 +50,19 @@
 #define PAGE_LAYOUT_BOX_PATH_LENGTH 1
 #define PRINT_PREVIEW_PATH_LENGTH   2
 /*@}*/
+
+/*      @brief Platform-dependent file separator */
+#ifdef _WIN32
+#define UTIL_FSEP "\"
+#else
+#define UTIL_FSEP "/"
+#endif
+
+#define FSEP_LEN 1
+
+/*      @brief Utility macro for compile-time string length calculations (w/null terminator) */
+#define STRLEN(str) sizeof(str) / sizeof(char)
+
 // clang-format on
 
 /**

@@ -29,31 +29,203 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fts.h>
 
-// const char *BK_GHOSTSCRIPT_ARGV[] = { "gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m",
-// "-dGraphicsAlphaBits=4" };
+const char *BK_TEMPDIR;
+const char *BK_TEMPFILE_TEMPLATE;
+
+/**
+ *      @detail Initialises BK_TEMPDIR and BK_TEMPFILE_TEMPLATE, preparing the application to
+ *              generate image previews as temporary files.
+ */
+int bk_init(void) {
+    #ifdef _WIN32
+    #else
+        size_t bk_tempdir_size = sizeof(char) * BK_TEMPDIR_LENGTH;
+        BK_TEMPDIR = calloc(1, bk_tempdir_size);
+        VERIFY_NULL(BK_TEMPDIR, bk_tempdir_size);
+
+        // Copy the temporary directory template to BK_TEMPDIR
+        strncpy((char*) BK_TEMPDIR, BK_TEMPDIR_TEMPLATE, BK_TEMPDIR_TEMPLATE_LENGTH);
+
+        /* mkdtemp() modifies the argument in place, but its return value determines whether it was
+           successful */
+        const char result[BK_TEMPDIR_LENGTH];
+        strncpy((char*) result, mkdtemp((char*) BK_TEMPDIR), BK_TEMPDIR_LENGTH);
+
+        if (NULL == (char*) result) {
+            return ERR_TEMPORARY_DIR_CREATION_FAILED;
+        }
+
+        size_t bk_tempfile_size = sizeof(char) * BK_TEMPFILE_TEMPLATE_LENGTH;
+        BK_TEMPFILE_TEMPLATE = calloc(1, bk_tempfile_size);
+        VERIFY_NULL(BK_TEMPFILE_TEMPLATE, bk_tempfile_size);
+
+
+        /* Using the newly created temporary director, create a template for temporary files in that
+           directory, to be used as destination files for print previews: e.g.
+           '/tmp/barcode.dir123abc/barcodeXXXXXX' */
+        strncpy((char*) BK_TEMPFILE_TEMPLATE, BK_TEMPDIR, BK_TEMPDIR_LENGTH);
+        strncat((char*) BK_TEMPFILE_TEMPLATE, UTIL_FSEP, FSEP_LEN);
+        strncat((char*) BK_TEMPFILE_TEMPLATE, BK_TEMPFILE_TEMPLATE_NAME, BK_TEMPFILE_TEMPLATE_NAME_LENGTH);
+    #endif
+
+    return SUCCESS;
+}
+
+/**
+ *      @detail Removes temporary files and frees references created in the lifetime of the program.
+ */
+int bk_exit(void) {
+    #ifdef _WIN32
+    #else
+        // FTS argv format
+        char * const dirs[BK_TEMPFILE_TEMPLATE_LENGTH] = { (char * const) BK_TEMPDIR, NULL };
+
+        // Creates an FTS (File Traversal System?) handle
+        // Note it has a depth of 1, as BK_TEMPDIR is only one directory
+        FTS *fts_handle = fts_open((char * const *) dirs, FTS_LOGICAL | FTS_NOCHDIR, NULL);
+        // Creates a linked list of children of the directory
+        FTSENT *file_list = fts_children(fts_handle, FTS_NAMEONLY);
+
+        if (chdir(BK_TEMPDIR) != 0) {
+            return ERR_CHDIR_FAILED;
+        }
+
+        // Iterate through the linked list and delete files as we go
+        while (NULL != file_list) {
+            remove(file_list->fts_name);
+            file_list = file_list->fts_link;
+        }
+
+        if (fts_close(fts_handle) != 0) {
+            return ERR_FTS_ERROR;
+        }
+
+    #endif
+
+    free((void *) BK_TEMPDIR);
+    free((void *) BK_TEMPFILE_TEMPLATE);
+
+    return SUCCESS;
+}
 
 /**
  *      @detail bk_generate_png() generates a temporary PNG file from a list of barcodes and
  *              property structures and returns the image path.
- *      @param barcodes A list of barcode strings to be encoded
- *      @param quantities A list of barcode quantities (@c barcode[n] is drawn @c quantities[n]
- *                        times)
- *      @param num_barcodes The length of @c barcodes
- *      @param props The PostScript properties to be used when generating the PostScript and image
- *      @param layout The arrangement of rows and columns used to lay out the barcodes
- *      @return The file path to a generated PNG image
  */
 
 // clang-format off
-char* bk_generate_png(
+int bk_generate_png(
     char barcodes[][BK_BARCODE_LENGTH],
     int quantities[],
     int num_barcodes,
     PSProperties * props,
-    Layout * layout
+    Layout * layout,
+    char * png_name
 ) {
-// clang-format off
+   // clang-format on
+
+   /* Algorithm:
+    (i) Generate temporary file name for destination PNG
+    (ii) Generate barcodes from input text
+    (iii) Generate PostScript from the given barcodes and properties and store in a string buffer
+    (iv) Generate PNG from the generated PostScript and write to the temporary file
+    (v) Return the file name */
+    char *postscript_dest;
+    Code128 **barcode_structs;
+
+    png_name = calloc(1, BK_TEMPFILE_TEMPLATE_LENGTH);
+
+    /* Calculate total number of barcodes that will be generated, which is used to calculate the
+       size of the barcode buffer */
+    size_t barcode_structs_size = 0;
+    for (int barcode_no = 0; barcode_no < num_barcodes; barcode_no++) {
+        for (int barcode_idx = 0; barcode_idx < quantities[barcode_no]; barcode_idx++) {
+            barcode_structs_size++;
+        }
+    }
+    barcode_structs_size *= sizeof *barcode_structs;
+
+    barcode_structs = calloc(1, barcode_structs_size);
+    VERIFY_NULL(barcode_structs, barcode_structs_size);
+
+    /* Windows _mktemp() returns a string, whereas Unix mktemp() modifies the template string
+       in-place */
+    #ifdef _WIN32
+        strncpy((char*png_name, _mktemp(BK_TEMPFILE_TEMPLATE), BK_TEMPFILE_TEMPLATE_LENGTH);
+    #else
+        strncpy(png_name, BK_TEMPFILE_TEMPLATE, BK_TEMPFILE_TEMPLATE_LENGTH);
+        mktemp(png_name);
+    #endif
+
+    fprintf(stderr, "PNG NAME: '%s'\n", png_name);
+
+    for (int barcode_no = 0; barcode_no < num_barcodes; barcode_no++) {
+        for (int barcode_idx = 0; barcode_idx < quantities[barcode_no]; barcode_idx++) {
+            c128_encode((uchar *) barcodes[barcode_no], strlen(barcodes[barcode_no]), &barcode_structs[barcode_idx]);
+        }
+    }
+
+    return SUCCESS;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const char *BK_GHOSTSCRIPT_ARGV[] = { "gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m",
+// "-dGraphicsAlphaBits=4" };
+
     /*
     Code128 **barcode_structs;
     int total_barcodes = 0;
@@ -153,5 +325,3 @@ char* bk_generate_png(
 
     return png_name;
     */
-    return "";
-}

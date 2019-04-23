@@ -55,9 +55,6 @@ static void barcode_app_open(GApplication *, GFile **, gint, const gchar *);
 /*      @brief (Required by GTK) BarcodeApp class initialisation */
 static void barcode_app_class_init(BarcodeAppClass *);
 
-/*      @brief (Required by GTK) Quit a BarcodeApp */
-static void barcode_app_quit(GApplication *);
-
 /*      @brief (Required by GTK) Create a new BarcodeApp */
 BarcodeApp *barcode_app_new(void);
 
@@ -220,5 +217,8 @@ void spin_button_value_changed(GtkSpinButton *, int *);
  */
 int barcode_entry_focus_out(GtkEntry *, GdkEvent, int *);
 /*@}*/
+
+/*      @brief Clean up any mess left from the UI */
+void ui_cleanup(void);
 
 #endif

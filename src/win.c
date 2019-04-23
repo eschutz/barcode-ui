@@ -28,7 +28,10 @@ G_DEFINE_TYPE(BarcodeWindow, barcode_window, GTK_TYPE_APPLICATION_WINDOW);
 
 static void barcode_window_init(BarcodeWindow *win) { gtk_widget_init_template(GTK_WIDGET(win)); }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void barcode_window_open(BarcodeWindow *win, GFile *file) {}
+#pragma GCC diagnostic pop
 
 static void barcode_window_class_init(BarcodeWindowClass *class) {
     /* Here we let GtkBuilder know that we want to use the following functions as UI callbacks.

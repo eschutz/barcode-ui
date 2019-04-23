@@ -29,12 +29,16 @@
  */
 /*@{*/
 // clang-format off
-#define SUCCESS                 0
-#define ERR_GENERIC             1
-#define ERR_WIDGET_NOT_FOUND    2
-#define ERR_NO_WIDGET_CHILDREN  3
-#define ERR_INVALID_STRING      4
-#define GHOSTSCRIPT_ERR_GENERIC -1
+#define SUCCESS                             0
+#define ERR_GENERIC                         1
+#define ERR_WIDGET_NOT_FOUND                2
+#define ERR_NO_WIDGET_CHILDREN              3
+#define ERR_INVALID_STRING                  4
+#define ERR_TEMPORARY_DIR_CREATION_FAILED   5
+#define ERR_TEMPORARY_FILE_CREATION_FAILED  6
+#define ERR_CHDIR_FAILED                    7
+#define ERR_FTS_ERROR                       8
+#define GHOSTSCRIPT_ERR_GENERIC             -1
 /*@}*/
 
 // clang-format on
