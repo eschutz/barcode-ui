@@ -27,6 +27,7 @@
 #include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <fts.h>
@@ -77,6 +78,8 @@ int bk_init(void) {
  *      @detail Removes temporary files and frees references created in the lifetime of the program.
  */
 int bk_exit(void) {
+    int status = SUCCESS;;
+
     #ifdef _WIN32
     #else
         // FTS argv format
@@ -89,7 +92,8 @@ int bk_exit(void) {
         FTSENT *file_list = fts_children(fts_handle, FTS_NAMEONLY);
 
         if (chdir(BK_TEMPDIR) != 0) {
-            return ERR_CHDIR_FAILED;
+            status = ERR_CHDIR_FAILED;
+            goto cleanup;
         }
 
         // Iterate through the linked list and delete files as we go
@@ -99,20 +103,22 @@ int bk_exit(void) {
         }
 
         if (fts_close(fts_handle) != 0) {
-            return ERR_FTS_ERROR;
+            status = ERR_FTS_ERROR;
+            goto cleanup;
         }
 
     #endif
 
+    cleanup:
     free((void *) BK_TEMPDIR);
     free((void *) BK_TEMPFILE_TEMPLATE);
 
-    return SUCCESS;
+    return status;
 }
 
 /**
  *      @detail bk_generate_png() generates a temporary PNG file from a list of barcodes and
- *              property structures and returns the image path.
+ *              property structures and fills the destination pointer with the image path.
  */
 
 // clang-format off
@@ -124,36 +130,45 @@ int bk_generate_png(
     Layout * layout,
     char * png_name
 ) {
-   // clang-format on
+    // clang-format on
 
-   /* Algorithm:
-    (i) Generate temporary file name for destination PNG
-    (ii) Generate barcodes from input text
-    (iii) Generate PostScript from the given barcodes and properties and store in a string buffer
-    (iv) Generate PNG from the generated PostScript and write to the temporary file
-    (v) Return the file name */
     char *postscript_dest;
     Code128 **barcode_structs;
+    // There are multiple failure points so we define some memory allocation flags
+    bool postscript_allocated = false;
+    int num_allocated = 0;
+
+    int status = SUCCESS;
 
     png_name = calloc(1, BK_TEMPFILE_TEMPLATE_LENGTH);
 
     /* Calculate total number of barcodes that will be generated, which is used to calculate the
        size of the barcode buffer */
+    int total_barcodes = 0;
     size_t barcode_structs_size = 0;
     for (int barcode_no = 0; barcode_no < num_barcodes; barcode_no++) {
         for (int barcode_idx = 0; barcode_idx < quantities[barcode_no]; barcode_idx++) {
-            barcode_structs_size++;
+            total_barcodes++;
         }
     }
-    barcode_structs_size *= sizeof *barcode_structs;
+    barcode_structs_size = sizeof *barcode_structs * total_barcodes;
 
     barcode_structs = calloc(1, barcode_structs_size);
     VERIFY_NULL(barcode_structs, barcode_structs_size);
 
+
+     /** Algorithm:
+      (i) Generate temporary file name for destination PNG
+      (ii) Generate barcodes from input text
+      (iii) Generate PostScript from the given barcodes and properties and store in a string buffer
+      (iv) Generate PNG from the generated PostScript and write to the temporary file
+      (v) Return the file name **/
+
+    /* (i) */
     /* Windows _mktemp() returns a string, whereas Unix mktemp() modifies the template string
        in-place */
     #ifdef _WIN32
-        strncpy((char*png_name, _mktemp(BK_TEMPFILE_TEMPLATE), BK_TEMPFILE_TEMPLATE_LENGTH);
+        strncpy(png_name, _mktemp(BK_TEMPFILE_TEMPLATE), BK_TEMPFILE_TEMPLATE_LENGTH);
     #else
         strncpy(png_name, BK_TEMPFILE_TEMPLATE, BK_TEMPFILE_TEMPLATE_LENGTH);
         mktemp(png_name);
@@ -161,13 +176,40 @@ int bk_generate_png(
 
     fprintf(stderr, "PNG NAME: '%s'\n", png_name);
 
+    /* (ii) */
+    /* Loop over each barcode, then encode that barcode the corresponding number of times specified
+       in quantities[]. This creates an array of internal barcode representations which we later use
+       to generate PostScript */
     for (int barcode_no = 0; barcode_no < num_barcodes; barcode_no++) {
         for (int barcode_idx = 0; barcode_idx < quantities[barcode_no]; barcode_idx++) {
-            c128_encode((uchar *) barcodes[barcode_no], strlen(barcodes[barcode_no]), &barcode_structs[barcode_idx]);
+            status = c128_encode((uchar *) barcodes[barcode_no], strlen(barcodes[barcode_no]), &barcode_structs[barcode_no + barcode_idx]);
+            num_allocated++;
+            if (status != SUCCESS) {
+                goto cleanup;
+            }
         }
     }
 
-    return SUCCESS;
+    /* (iii) */
+    status = c128_ps_layout(barcode_structs, total_barcodes, &postscript_dest, props, layout);
+    postscript_allocated = true;
+
+    fprintf(stderr, "%s", postscript_dest);
+
+    if (status != SUCCESS) {
+        goto cleanup;
+    }
+
+    // Clean up barcode_structs
+    cleanup:
+    for (int i = 0; i < num_allocated; i++) {
+        free(barcode_structs[i]);
+    }
+    free(barcode_structs);
+
+    if (postscript_allocated) free(postscript_dest);
+
+    return status;
 }
 
 
