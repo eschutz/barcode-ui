@@ -1,0 +1,10 @@
+main
+main.exe
+main.tds
+.DS_Store
+build/*
+!build/.gitkeep
+doc/*
+!doc/.gitkeep
+lib/*
+!lib/.gitkeep
