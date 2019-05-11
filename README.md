@@ -1,5 +1,5 @@
 # barcode-ui
-A simple Windows GUI to [libbarcode](https://github.com/eschutz/libbarcode.git) library. Generates barcodes in PostScript.
+A simple GUI to [libbarcode](https://github.com/eschutz/libbarcode.git). Generates barcodes in PostScript.
 
 ## Requirements
 - [libbarcode](https://github.com/eschutz/libbarcode.git)
