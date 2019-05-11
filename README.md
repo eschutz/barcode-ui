@@ -15,4 +15,4 @@ This project is licensed under the GNU Lesser General Public License. See [LICEN
 - [] add preview generation function
 - [] add printing via GtkPrintOperation
 - [] ensure windows builds and runs
-- [] docs - Saturday
+- [] docs
