@@ -198,7 +198,7 @@ int bk_generate_png(
            to generate PostScript */
         for (int barcode_no = 0; barcode_no < num_barcodes; barcode_no++) {
             for (int barcode_idx = 0; barcode_idx < quantities[barcode_no]; barcode_idx++) {
-                status = c128_encode((uchar *) barcodes[barcode_no], strlen(barcodes[barcode_no]), &barcode_structs[barcode_no + barcode_idx]);
+                status = c128_encode((uchar *) barcodes[barcode_no], strlen(barcodes[barcode_no]), &barcode_structs[num_allocated]);
                 if (status != SUCCESS) {
                     longjmp(env, status);
                 }
