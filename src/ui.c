@@ -40,6 +40,12 @@ static BarcodeWindow *win;
 /*      @brief Global barcode_entry widget reference */
 static GtkWidget *barcode_entry;
 
+/*      @brief Global settings_frame widget reference */
+static GtkWidget *settings_frame;
+
+/*      @brief Global settings_label widget (label of settings frame) reference */
+static GtkLabel *settings_label;
+
 /*      @brief Global settings_box widget reference */
 static GtkWidget *settings_box;
 
@@ -74,9 +80,13 @@ static int barcode_entry_id = 0;
  *      @detail @c barcode_app_init is used for initialising the PostScript properties, page layout,
  *              and barcode quantities to their respective default values.
  */
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-static void            barcode_app_init(BarcodeApp *app) {
+
+static bool settings_frame_err = false;
+
+static void barcode_app_init(BarcodeApp *app) {
     atexit(ui_cleanup);
 
     ps_properties         = PS_DEFAULT_PROPS;
@@ -84,7 +94,7 @@ static void            barcode_app_init(BarcodeApp *app) {
 
     size_t layout_size = sizeof(Layout);
     page_layout        = calloc(1, layout_size);
-    VERIFY_NULL(page_layout, layout_size);
+    VERIFY_NULL_G(page_layout, layout_size);
 
     page_layout->cols = DEFAULT_COLS;
     page_layout->rows = DEFAULT_ROWS;
@@ -108,6 +118,9 @@ static void barcode_app_activate(GApplication *app) {
     win = barcode_window_new(BARCODE_APP(app));
 
     WIDGET_LOOKUP(win, barcode_entry_path, BARCODE_ENTRY_PATH_LENGTH, barcode_entry);
+
+    WIDGET_LOOKUP(win, settings_frame_path, SETTINGS_FRAME_PATH_LENGTH, settings_frame);
+    settings_label = GTK_LABEL(gtk_frame_get_label_widget(GTK_FRAME(settings_frame)));
 
     WIDGET_LOOKUP(win, settings_box_path, SETTINGS_BOX_PATH_LENGTH, settings_box);
 
@@ -184,9 +197,7 @@ void refresh(void) {
         }
     }
 
-    size_t preview_size = sizeof(char) * BK_TEMPFILE_TEMPLATE_LENGTH;
-    char * preview_path = calloc(1, preview_size);
-    VERIFY_NULL(preview_path, preview_size);
+    char *preview_path;
 
     // bk_generate_png generates the print preview and returns its file path as a string
     int status = bk_generate_png(
@@ -195,12 +206,28 @@ void refresh(void) {
         new_barcodes_num,
         &ps_properties,
         page_layout,
-        preview_path
+        &preview_path
     );
 
     if (SUCCESS == status) {
         // Update the image widget with the new file path
         gtk_image_set_from_file(GTK_IMAGE(print_preview), preview_path);
+
+        if (settings_frame_err) {
+            gtk_label_set_markup(
+                settings_label,
+                SETTINGS_LABEL_DEF_MARKUP
+            );
+            settings_frame_err = false;
+        }
+
+    } else {
+        settings_frame_err = true;
+        gtk_label_set_markup(
+            settings_label,
+            SETTINGS_LABEL_ERR_MARKUP
+        );
+        fprintf(stderr, "Error: generating preview – received status code %d\n", status);
     }
 
     free(preview_path);
@@ -399,7 +426,7 @@ void spin_button_value_changed(GtkSpinButton *button, int *id) {
     int    _id;
     size_t btn_name_size = sizeof(char) * WIDGET_ID_MAXLEN;
     char * btn_name      = calloc(1, btn_name_size);
-    VERIFY_NULL(btn_name, btn_name_size);
+    VERIFY_NULL_G(btn_name, btn_name_size);
     strncpy(btn_name, gtk_widget_get_name(GTK_WIDGET(button)), WIDGET_ID_MAXLEN);
 
     // status in this case is the number of variables filled by sscanf()
@@ -426,7 +453,7 @@ int barcode_entry_focus_out(GtkEntry *entry, GdkEvent event, int *id) {
     int    _id;
     size_t entry_name_size = sizeof(char) * WIDGET_ID_MAXLEN;
     char * entry_name      = calloc(1, entry_name_size);
-    VERIFY_NULL(entry_name, entry_name_size);
+    VERIFY_NULL_G(entry_name, entry_name_size);
     strncpy(entry_name, gtk_widget_get_name(GTK_WIDGET(entry)), WIDGET_ID_MAXLEN);
 
     // status in this case is the number of variables filled by sscanf()

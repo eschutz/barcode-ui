@@ -19,4 +19,4 @@
 -I/usr/local/opt/gettext/include
 -I/usr/local/Cellar/pcre/8.43/include
 -I/usr/local/Cellar/ghostscript/9.26_1/include/ghostscript/
--Ibarcode
+-Iinclude

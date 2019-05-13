@@ -45,6 +45,7 @@
 /*@{*/
 // clang-format off
 #define BARCODE_ENTRY_PATH_LENGTH   2
+#define SETTINGS_FRAME_PATH_LENGTH  2
 #define SETTINGS_BOX_PATH_LENGTH    3
 // Child of settings_box
 #define PAGE_LAYOUT_BOX_PATH_LENGTH 1
@@ -97,6 +98,7 @@
  */
 /*@{*/
 extern const char barcode_entry_path[BARCODE_ENTRY_PATH_LENGTH][WIDGET_ID_MAXLEN];
+extern const char settings_frame_path[SETTINGS_FRAME_PATH_LENGTH][WIDGET_ID_MAXLEN];
 extern const char settings_box_path[SETTINGS_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN];
 extern const char page_layout_box_path[PAGE_LAYOUT_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN];
 extern const char print_preview_path[PRINT_PREVIEW_PATH_LENGTH][WIDGET_ID_MAXLEN];

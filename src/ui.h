@@ -31,6 +31,9 @@
 /*      @brief Index of the units combo box within the units flow box */
 #define UNITS_COMBO_IDX 1
 
+#define SETTINGS_LABEL_DEF_MARKUP "Page Layout"
+#define SETTINGS_LABEL_ERR_MARKUP "<span foreground=\"red\">Page Layout</span>"
+
 /*      @brief (Required by GTK) BarcodeApp type macro */
 #define BARCODE_TYPE_APP barcode_app_get_type()
 

@@ -49,13 +49,13 @@
  *      @param n The size of the memory allocated to the pointer (used in the error message)
  */
 // clang-format off
-#define VERIFY_NULL(var, n)                                                                     \
+#define VERIFY_NULL_G(var, n)                                                                   \
     do {                                                                                        \
         if (var == NULL) {                                                                      \
             fprintf(                                                                            \
                 stderr,                                                                         \
-                "null pointer: could not allocate %d bytes for variable \"%s\" at %s:%d in %s", \
-                (int) n,                                                                        \
+                "null pointer: could not allocate %lu bytes for variable \"%s\" at %s:%d in %s",\
+                (unsigned long) n,                                                              \
                 #var,                                                                           \
                 __FILE__,                                                                       \
                 __LINE__ - 8,                                       /* 8 lines up until there */\

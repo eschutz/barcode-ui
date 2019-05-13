@@ -31,6 +31,9 @@
 const char barcode_entry_path[BARCODE_ENTRY_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"content_box", "barcode_entry_box"};
 
+const char settings_frame_path[SETTINGS_FRAME_PATH_LENGTH][WIDGET_ID_MAXLEN]
+    = {"content_box", "settings_frame"};
+
 const char settings_box_path[SETTINGS_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"content_box", "settings_frame", "settings_box"};
 
@@ -112,7 +115,7 @@ int gtk_entry_get_text_as_double(GtkEntry *entry, double *dest) {
     int   status = SUCCESS;
     int   len    = sizeof(char) * (gtk_entry_get_max_length(entry) + 1);
     char *text   = calloc(1, len);
-    VERIFY_NULL(text, len);
+    VERIFY_NULL_G(text, len);
 
     strncpy(text, gtk_entry_get_text(entry), len);
     if (isfloat(text)) {

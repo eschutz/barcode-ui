@@ -84,6 +84,6 @@ int bk_exit(void);
  *      @param png_name The destination pointer for the PNG name
  *      @return SUCCESS
  */
-int bk_generate_png(char[][C128_MAX_STRING_LEN], int[], int, PSProperties *, Layout *, char *);
+int bk_generate_png(char[][C128_MAX_STRING_LEN], int[], int, PSProperties *, Layout *, char **);
 
 #endif

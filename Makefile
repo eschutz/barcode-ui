@@ -11,7 +11,8 @@ _DEPS=ui.h win.h util.h backend.h error.h
 DEPS=$(patsubst %,$(SDIR)/%,$(_DEPS))
 LIBPATH=lib
 BARCODELIB=barcode
-CFLAGS=-Wall -Wextra -Wno-unused-command-line-argument -g -lgs -I /usr/local/Cellar/ghostscript/9.26_1/include/ghostscript -L$(LIBPATH) -l$(BARCODELIB) -I$(BARCODELIB)
+INCLUDE_PATH=include
+CFLAGS=-Wall -Wextra -Wno-unused-command-line-argument -g -lgs -I /usr/local/Cellar/ghostscript/9.26_1/include/ghostscript -L$(LIBPATH) -l$(BARCODELIB) -I$(INCLUDE_PATH)
 ifeq ($(OS),Windows_NT)
 	CC=bcc32x
 else
