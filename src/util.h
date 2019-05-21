@@ -26,13 +26,9 @@
 
 #include "error.h"
 #include "gtk/gtk.h"
-#include "iapi.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-/*      @brief Minimum supported GhostScript version */
-#define GS_VER 926
 
 /*      @brief Maximum length of a widget name or ID */
 #define WIDGET_ID_MAXLEN 32
@@ -101,17 +97,6 @@ extern const char barcode_entry_path[BARCODE_ENTRY_PATH_LENGTH][WIDGET_ID_MAXLEN
 extern const char settings_frame_path[SETTINGS_FRAME_PATH_LENGTH][WIDGET_ID_MAXLEN];
 extern const char settings_box_path[SETTINGS_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN];
 extern const char page_layout_box_path[PAGE_LAYOUT_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN];
-extern const char print_preview_path[PRINT_PREVIEW_PATH_LENGTH][WIDGET_ID_MAXLEN];
-/*@}*/
-
-/**
- *      @defgroup GhostScriptEnvironment Variables required for working with GhostScript
- */
-/*@{*/
-/*      @brief Global GhostScript instance variable */
-extern void *gs_instance;
-/*      @brief Flag to tell whether GhostScript has been initialised */
-extern bool gs_initialised;
 /*@}*/
 
 /**
@@ -143,30 +128,6 @@ int gtk_widget_query_name(GtkContainer *, char *, GtkWidget **);
  *      @return ERR_INVALID_STRING, SUCCESS
  */
 int gtk_entry_get_text_as_double(GtkEntry *, double *);
-
-/**
- *      @brief Initialises the GhostScript interpreter
- *      @return GHOSTSCRIPT_ERR_GENERIC, SUCCESS
- */
-int ghostscript_init(void);
-
-/**
- *      @brief Initialises the GhostScript interpreter instance
- *      @param pinstance A double void destination pointer for the GhostScript instance
- *      @param caller_handler A void pointer for the caller handler
- *      @param argc Length of @c argv
- *      @param argv Vector of command line arguments (the first is ignored, see GhostScript
- *                  documentation for more info)
- *      @return < 0 if error (GhostScript error code), SUCCESS
- */
-int ghostscript_instance(void **, void *, int argc, char **);
-
-/**
- *      @brief Shutdowns the GhostScript interpreter
- *      @param instance The used GhostScript Instance
- *      @return < 0 if error (GhostScript error code), SUCCESS
- */
-int ghostscript_exit(void *);
 
 /**
  *      @brief Checks if a string represents a float

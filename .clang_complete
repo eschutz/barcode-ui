@@ -20,5 +20,4 @@
 -I/usr/local/Cellar/glib/2.60.2/lib/glib-2.0/include
 -I/usr/local/opt/gettext/include
 -I/usr/local/Cellar/libffi/3.2.1/lib/libffi-3.2.1/include
--I/usr/local/Cellar/ghostscript/9.26_1/include/ghostscript/
 -Iinclude

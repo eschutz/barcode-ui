@@ -51,13 +51,6 @@
           </object>
         </child>
         <child>
-          <object class="GtkImage" id="print_preview">
-            <property name="visible">True</property>
-            <property name="file">/Users/Elijah/Documents/Programs/C/barcode-ui/src/ui/bc.png</property>
-            <property name="name">print_preview</property>
-          </object>
-        </child>
-        <child>
           <object class="GtkFrame" id="settings_frame">
             <property name="name">settings_frame</property>
             <property name="visible">True</property>

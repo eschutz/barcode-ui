@@ -38,7 +38,6 @@
 #define ERR_TEMPORARY_FILE_CREATION_FAILED  6
 #define ERR_CHDIR_FAILED                    7
 #define ERR_FTS_ERROR                       8
-#define GHOSTSCRIPT_ERR_GENERIC             -1
 /*@}*/
 
 // clang-format on

@@ -31,6 +31,7 @@
  *      @brief Cleaning up APIs
  */
 void cleanup(void) {
+    /*
     int status = bk_exit();
 
     switch (status) {
@@ -45,21 +46,13 @@ void cleanup(void) {
         default:
             fprintf(stderr, "ERROR: Received invalid error code from bk_exit()");
     }
-
-    if (ghostscript_exit(gs_instance) < SUCCESS) {
-        fprintf(stderr, "ERROR: Error on exiting Ghostscript!\n");
-    }
+    */
 }
 
 int main(int argc, char **argv) {
     atexit(cleanup);
 
-    // GhostScript error messages are such that failure is < 0 (SUCCESS)
-    if (ghostscript_init() < SUCCESS) {
-        fprintf(stderr, "FATAL: Could not initialise GhostScript, exiting.\n");
-        exit(ERR_GENERIC);
-    }
-
+    /*
     int status = bk_init();
 
     if (ERR_TEMPORARY_DIR_CREATION_FAILED == status) {
@@ -68,6 +61,7 @@ int main(int argc, char **argv) {
     } else if (SUCCESS != status) {
         fprintf(stderr, "FATAL: Received invalid error code from bk_init()\n");
     }
+    */
 
     return g_application_run(G_APPLICATION(barcode_app_new()), argc, argv);
 }

@@ -49,9 +49,6 @@ static GtkLabel *settings_label;
 /*      @brief Global settings_box widget reference */
 static GtkWidget *settings_box;
 
-/*      @brief Global print_preview widget reference */
-static GtkWidget *print_preview;
-
 /*      @brief Global PostScript properties structure */
 static PSProperties ps_properties;
 
@@ -124,8 +121,6 @@ static void barcode_app_activate(GApplication *app) {
 
     WIDGET_LOOKUP(win, settings_box_path, SETTINGS_BOX_PATH_LENGTH, settings_box);
 
-    WIDGET_LOOKUP(win, print_preview_path, PRINT_PREVIEW_PATH_LENGTH, print_preview);
-
     new_barcode_btn_clicked(NULL, NULL);
 
     // Extract the outer settings_box flow box...
@@ -197,22 +192,19 @@ void refresh(void) {
         }
     }
 
-    char *preview_path;
+    char *postscript_dest;
 
     // bk_generate_png generates the print preview and returns its file path as a string
-    int status = bk_generate_png(
+    int status = bk_generate(
         new_barcodes,
         new_barcode_quantities,
         new_barcodes_num,
         &ps_properties,
         page_layout,
-        &preview_path
+        &postscript_dest
     );
 
     if (SUCCESS == status) {
-        // Update the image widget with the new file path
-        gtk_image_set_from_file(GTK_IMAGE(print_preview), preview_path);
-
         if (settings_frame_err) {
             gtk_label_set_markup(
                 settings_label,
@@ -220,17 +212,17 @@ void refresh(void) {
             );
             settings_frame_err = false;
         }
-
+        // If the function call was unsuccessful, anything allocated to postscript_dest is freed as
+        // it aborts, so postscript_dest only needs to be freed when the call is successful
+       free(postscript_dest);
     } else {
         settings_frame_err = true;
         gtk_label_set_markup(
             settings_label,
             SETTINGS_LABEL_ERR_MARKUP
         );
-        fprintf(stderr, "Error: generating preview – received status code %d\n", status);
+        fprintf(stderr, "Error: generating PostScript – received status code %d\n", status);
     }
-
-    free(preview_path);
     /* Debugging
     fprintf(stderr, "Page Layout --\n");
     fprintf(stderr, "       rows : %d\n", page_layout->rows);

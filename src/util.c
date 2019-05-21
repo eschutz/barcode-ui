@@ -39,13 +39,7 @@ const char settings_box_path[SETTINGS_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
 
 const char page_layout_box_path[PAGE_LAYOUT_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"page_layout_box"};
-
-const char print_preview_path[PRINT_PREVIEW_PATH_LENGTH][WIDGET_ID_MAXLEN]
-    = {"content_box", "print_preview"};
 // clang-format on
-
-void *gs_instance;
-bool  gs_initialised = false;
 
 /**
  *      @detail Recursively searches containers to find the widget at the search path.
@@ -124,40 +118,6 @@ int gtk_entry_get_text_as_double(GtkEntry *entry, double *dest) {
         status = ERR_INVALID_STRING;
     }
     free(text);
-    return status;
-}
-
-int ghostscript_init(void) {
-    gsapi_revision_t rev;
-    // Checks if a supported version of GhostScript is installed
-    if (gsapi_revision(&rev, sizeof rev) == 0) {
-        if (rev.revision < GS_VER) {
-            fprintf(stderr, "Error: Ghostscript version must be at least %.2f\n", GS_VER / 100.0);
-            return GHOSTSCRIPT_ERR_GENERIC;
-        }
-    } else {
-        fprintf(stderr, "Error (internal): Ghostscript API revision structure size is incorrect\n");
-        return GHOSTSCRIPT_ERR_GENERIC;
-    }
-
-    return SUCCESS;
-}
-
-int ghostscript_instance(void **pinstance, void *caller_handle, int argc, char **argv) {
-    int status = gsapi_new_instance(pinstance, caller_handle);
-    if (status < SUCCESS) {
-        return status;
-    }
-
-    status = gsapi_init_with_args(*pinstance, argc, argv);
-
-    gs_initialised = true;
-    return status;
-}
-
-int ghostscript_exit(void *instance) {
-    int status = gsapi_exit(instance);
-    gsapi_delete_instance(instance);
     return status;
 }
 

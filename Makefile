@@ -12,7 +12,7 @@ DEPS=$(patsubst %,$(SDIR)/%,$(_DEPS))
 LIBPATH=lib
 BARCODELIB=barcode
 INCLUDE_PATH=include
-CFLAGS=-Wall -Wextra -Wno-unused-command-line-argument -g -lgs -I /usr/local/Cellar/ghostscript/9.26_1/include/ghostscript -L$(LIBPATH) -l$(BARCODELIB) -I$(INCLUDE_PATH)
+CFLAGS=-Wall -Wextra -Wno-unused-command-line-argument -g -L$(LIBPATH) -l$(BARCODELIB) -I$(INCLUDE_PATH)
 ifeq ($(OS),Windows_NT)
 	CC=bcc32x
 else
