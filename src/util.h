@@ -41,8 +41,8 @@
 /*@{*/
 // clang-format off
 #define BARCODE_ENTRY_PATH_LENGTH   2
-#define SETTINGS_FRAME_PATH_LENGTH  2
-#define SETTINGS_BOX_PATH_LENGTH    3
+#define SETTINGS_FRAME_PATH_LENGTH  3
+#define SETTINGS_BOX_PATH_LENGTH    4
 // Child of settings_box
 #define PAGE_LAYOUT_BOX_PATH_LENGTH 1
 #define PRINT_PREVIEW_PATH_LENGTH   2

@@ -2,7 +2,7 @@ main
 main.exe
 main.tds
 .DS_Store
-build/*
+build/*.o
 !build/.gitkeep
 doc/*
 !doc/.gitkeep

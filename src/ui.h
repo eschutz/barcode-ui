@@ -62,9 +62,9 @@ static void barcode_app_class_init(BarcodeAppClass *);
 BarcodeApp *barcode_app_new(void);
 
 /**
- *      @brief Refreshes the barcode print preview with the latest data
+ *      @brief Refreshes the barcode PostScript with the latest data
  */
-void refresh(void);
+void refresh_postscript(void);
 
 /**
  *      @defgroup UICallbacks Event handlers (callbacks) corresponding to certain events on specific
@@ -219,7 +219,11 @@ void spin_button_value_changed(GtkSpinButton *, int *);
  *               g_signal_emit() instead.
  */
 int barcode_entry_focus_out(GtkEntry *, GdkEvent, int *);
+
+void print_button_clicked(GtkButton *, gpointer);
 /*@}*/
+
+int do_print(void);
 
 /*      @brief Clean up any mess left from the UI */
 void ui_cleanup(void);

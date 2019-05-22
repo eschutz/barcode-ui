@@ -32,10 +32,10 @@ const char barcode_entry_path[BARCODE_ENTRY_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"content_box", "barcode_entry_box"};
 
 const char settings_frame_path[SETTINGS_FRAME_PATH_LENGTH][WIDGET_ID_MAXLEN]
-    = {"content_box", "settings_frame"};
+    = {"content_box", "right_box", "settings_frame"};
 
 const char settings_box_path[SETTINGS_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
-    = {"content_box", "settings_frame", "settings_box"};
+    = {"content_box", "right_box", "settings_frame", "settings_box"};
 
 const char page_layout_box_path[PAGE_LAYOUT_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"page_layout_box"};

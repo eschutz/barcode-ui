@@ -173,9 +173,10 @@ BarcodeApp *barcode_app_new(void) {
 }
 
 /**
- *      @detail refresh() is called whenever a field affecting the print preview is updated.
+ *      @detail refresh_postscript() is called whenever a field affecting the generated postscript
+ *              preview updated.
  */
-void refresh(void) {
+void refresh_postscript(void) {
     // barcode_entry_id here represents the number of barcode entry dialogues on screen
     char new_barcodes[barcode_entry_id][BK_BARCODE_LENGTH];
     int  new_barcode_quantities[barcode_entry_id];
@@ -256,7 +257,6 @@ void rows_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         page_layout->rows = value;
-        refresh();
     }
 }
 
@@ -270,7 +270,6 @@ void cols_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         page_layout->cols = value;
-        refresh();
     }
 }
 
@@ -281,7 +280,6 @@ void cols_changed(GtkEntry *entry, gpointer data) {
  */
 void units_changed(GtkComboBoxText *combo_box, gpointer data) {
     strncpy(ps_properties.units, gtk_combo_box_text_get_active_text(combo_box), UNIT_ID_LEN);
-    refresh();
 }
 
 /**
@@ -294,7 +292,6 @@ void lmargin_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.lmargin = value;
-        refresh();
     }
 }
 
@@ -308,7 +305,6 @@ void rmargin_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.rmargin = value;
-        refresh();
     }
 }
 
@@ -322,7 +318,6 @@ void bmargin_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.bmargin = value;
-        refresh();
     }
 }
 
@@ -336,7 +331,6 @@ void tmargin_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.tmargin = value;
-        refresh();
     }
 }
 
@@ -350,7 +344,6 @@ void bar_width_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.bar_width = value;
-        refresh();
     }
 }
 
@@ -364,7 +357,6 @@ void bar_height_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.bar_height = value;
-        refresh();
     }
 }
 
@@ -378,7 +370,6 @@ void padding_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.padding = value;
-        refresh();
     }
 }
 
@@ -392,7 +383,6 @@ void col_width_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.column_width = value;
-        refresh();
     }
 }
 
@@ -406,7 +396,6 @@ void fsize_changed(GtkEntry *entry, gpointer data) {
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
         ps_properties.fontsize = value;
-        refresh();
     }
 }
 
@@ -429,7 +418,6 @@ void spin_button_value_changed(GtkSpinButton *button, int *id) {
     }
 
     barcode_quantities[_id] = gtk_spin_button_get_value_as_int(button);
-    refresh();
     free(btn_name);
 }
 
@@ -454,7 +442,6 @@ int barcode_entry_focus_out(GtkEntry *entry, GdkEvent event, int *id) {
         fprintf(stderr, "sscanf failed on \"%s\"\n", entry_name);
     }
     strncpy(barcodes[_id], gtk_entry_get_text(entry), BK_BARCODE_LENGTH);
-    refresh();
 
     free(entry_name);
     return GDK_EVENT_PROPAGATE;

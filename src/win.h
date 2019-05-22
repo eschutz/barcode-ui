@@ -72,7 +72,7 @@
  *      @defgroup Defaults Default values for filling the UI
  */
 /*@{*/
-#define DEFAULT_WINSIZE_W   1280
+#define DEFAULT_WINSIZE_W   700
 #define DEFAULT_WINSIZE_H   480
 #define DEFAULT_COLS        2
 #define DEFAULT_ROWS        1
