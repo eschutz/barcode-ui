@@ -33,7 +33,13 @@
  */
 /*@{*/
 #define BK_BARCODE_LENGTH                   C128_MAX_STRING_LEN
+#define BK_TEMPFILE_TEMPLATE                P_tmpdir "barcodeXXXXXX"
+#define BK_TEMPFILE_TEMPLATE_SIZE           sizeof(BK_TEMPFILE_TEMPLATE) + 1
 /*@}*/
+
+int bk_init(void);
+
+int bk_exit(void);
 
 /**
  *      @brief Generates PostScript the given barcodes and properties
@@ -44,7 +50,14 @@
  *      @param props The PostScript properties to be used when generating the PostScript and image
  *      @param layout The arrangement of rows and columns used to lay out the barcodes
  *      @param postscript_dest The destination pointer for generated PostScript
- *      @return SUCCESS
+ *      @return SUCCESS,
+                ERR_INVALID_LAYOUT,
+                ERR_DATA_LENGTH,
+                ERR_CHAR_INVALID,
+                ERR_INVALID_CODE_SET,
+                ERR_ARGUMENT,
+                ERR_FILE_POSITION_RESET_FAILED,
+                ERR_FILE_WRITE_FAILED
  */
 int bk_generate(char[][C128_MAX_STRING_LEN], int[], int, PSProperties *, Layout *, char **);
 

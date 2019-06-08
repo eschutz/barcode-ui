@@ -24,11 +24,77 @@
 #include "backend.h"
 #include "error.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include <setjmp.h>
 
+static FILE * bk_tempfile;
+static char * bk_tempfile_path;
+
+int bk_init(void) {
+    jmp_buf env;
+    int status = SUCCESS;
+
+    if (!setjmp(env)) {
+        bk_tempfile_path = calloc(1, BK_TEMPFILE_TEMPLATE_SIZE);
+        VERIFY_NULL_BC(bk_tempfile_path, BK_TEMPFILE_TEMPLATE_SIZE);
+
+        // -1 to account for null terminator
+        strncpy((char*) bk_tempfile_path, BK_TEMPFILE_TEMPLATE, BK_TEMPFILE_TEMPLATE_SIZE - 1);
+
+        #ifdef _WIN32
+        if (SUCCESS = _mktemp_s(bk_tempfile_path, BK_TEMPFILE_TEMPLATE_SIZE)) {
+            bk_tempfile = fopen(bk_tempfile_path, "w");
+            tempfile_assigned = true;
+            if (NULL == bk_tempfile) {
+                status = ERR_TEMPORARY_FILE_CREATION_FAILED;
+                longjmp(env, status);
+            }
+        } else {
+            status = ERR_TEMPORARY_FILE_CREATION_FAILED;
+            longjmp(env, status);
+        }
+        #else
+        int temp_fd = mkstemp(bk_tempfile_path);
+        if (-1 == temp_fd) {
+            status = ERR_TEMPORARY_FILE_CREATION_FAILED;
+            longjmp(env, status);
+        }
+
+        bk_tempfile = fdopen(temp_fd, "w");
+        if (NULL == bk_tempfile) {
+            status = ERR_TEMPORARY_FILE_CREATION_FAILED;
+            longjmp(env, status);
+        }
+        #endif
+    } else {
+        free(bk_tempfile_path);
+    }
+
+    return status;
+}
+
+int bk_exit(void) {
+    int status = SUCCESS;
+
+    if (EOF == fclose(bk_tempfile)) {
+        status = ERR_FILE_CLOSE_FAILED;
+        // non-fatal error
+    }
+
+    if (SUCCESS != remove(bk_tempfile_path)) {
+        status = ERR_FILE_REMOVE_FAILED;
+        // non-fatal error
+    }
+
+    free(bk_tempfile_path);
+
+    return status;
+}
+
 /**
- *      @detail bk_generate_png() generates a temporary PNG file from a list of barcodes and
+ *      @detail bk_generate_png() generates a temporary po file from a list of barcodes and
  *              property structures and fills the destination pointer with the image path.
  */
 
@@ -39,9 +105,11 @@ int bk_generate(
     int num_barcodes,
     PSProperties * props,
     Layout * layout,
-    char ** postscript_dest
+    char ** ps_name_ptr
 ) {
     // clang-format on
+
+    char *postscript_dest;
     Code128 **barcode_structs;
     // There are multiple failure points so we define some memory allocation flags
     // Safe error handling is provided by setjmp() and longjmp()
@@ -64,7 +132,7 @@ int bk_generate(
         barcode_structs_size = sizeof *barcode_structs * total_barcodes;
 
         barcode_structs = calloc(1, barcode_structs_size);
-        VERIFY_NULL_G(barcode_structs, barcode_structs_size);
+        VERIFY_NULL_BC(barcode_structs, barcode_structs_size);
 
 
          /** Algorithm:
@@ -88,17 +156,36 @@ int bk_generate(
         }
 
         /* (iii) */
-        status = c128_ps_layout(barcode_structs, total_barcodes, postscript_dest, props, layout);
+        status = c128_ps_layout(barcode_structs, total_barcodes, &postscript_dest, props, layout);
 
         if (status != SUCCESS) {
             longjmp(env, status);
         }
 
         postscript_allocated = true;
-    } else {
-        if (postscript_allocated) {
-            free(postscript_dest);
+
+        // reset file position to 0
+        if (SUCCESS != fseek(bk_tempfile, 0, SEEK_SET)) {
+            status = ERR_FILE_POSITION_RESET_FAILED;
+            longjmp(env, status);
         }
+
+        // fprintf returns negative when an error occurs
+        if (fprintf(bk_tempfile, "%s", postscript_dest) < 0) {
+            status = ERR_FILE_WRITE_FAILED;
+            longjmp(env, status);
+        }
+
+        // allocate and copy file destination to the given pointer
+        *ps_name_ptr = calloc(1, BK_TEMPFILE_TEMPLATE_SIZE);
+        VERIFY_NULL_BC(*ps_name_ptr, BK_TEMPFILE_TEMPLATE_SIZE);
+
+        strncpy(*ps_name_ptr, bk_tempfile_path, BK_TEMPFILE_TEMPLATE_SIZE);
+
+    }
+
+    if (postscript_allocated) {
+        free(postscript_dest);
     }
 
     // Clean up barcode_structs

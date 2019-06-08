@@ -49,6 +49,12 @@ static GtkLabel *settings_label;
 /*      @brief Global settings_box widget reference */
 static GtkWidget *settings_box;
 
+/*      @brief Global UI hint text buffer */
+static GtkTextBuffer *ui_hint_text_buffer;
+
+/*      @brief Global ui_hint_view widget reference */
+static GtkWidget *ui_hint_view;
+
 /*      @brief Global PostScript properties structure */
 static PSProperties ps_properties;
 
@@ -91,7 +97,7 @@ static void barcode_app_init(BarcodeApp *app) {
 
     size_t layout_size = sizeof(Layout);
     page_layout        = calloc(1, layout_size);
-    VERIFY_NULL_G(page_layout, layout_size);
+    VERIFY_NULL_BC(page_layout, layout_size);
 
     page_layout->cols = DEFAULT_COLS;
     page_layout->rows = DEFAULT_ROWS;
@@ -118,6 +124,10 @@ static void barcode_app_activate(GApplication *app) {
 
     WIDGET_LOOKUP(win, settings_frame_path, SETTINGS_FRAME_PATH_LENGTH, settings_frame);
     settings_label = GTK_LABEL(gtk_frame_get_label_widget(GTK_FRAME(settings_frame)));
+
+    WIDGET_LOOKUP(win, ui_hint_view_path, UI_HINT_VIEW_PATH_LENGTH, ui_hint_view);
+    ui_hint_text_buffer = gtk_text_buffer_new(gtk_text_tag_table_new());
+    gtk_text_view_set_buffer(GTK_TEXT_VIEW(ui_hint_view), ui_hint_text_buffer);
 
     WIDGET_LOOKUP(win, settings_box_path, SETTINGS_BOX_PATH_LENGTH, settings_box);
 
@@ -174,9 +184,9 @@ BarcodeApp *barcode_app_new(void) {
 
 /**
  *      @detail refresh_postscript() is called whenever a field affecting the generated postscript
- *              preview updated.
+ *              is updated.
  */
-void refresh_postscript(void) {
+int refresh_postscript(char **print_file_dest) {
     // barcode_entry_id here represents the number of barcode entry dialogues on screen
     char new_barcodes[barcode_entry_id][BK_BARCODE_LENGTH];
     int  new_barcode_quantities[barcode_entry_id];
@@ -193,37 +203,16 @@ void refresh_postscript(void) {
         }
     }
 
-    char *postscript_dest;
-
-    // bk_generate_png generates the print preview and returns its file path as a string
-    int status = bk_generate(
+    // bk_generate_png generates the print preview and fills print_file_name with its file path as a
+    // string
+    return bk_generate(
         new_barcodes,
         new_barcode_quantities,
         new_barcodes_num,
         &ps_properties,
         page_layout,
-        &postscript_dest
+        print_file_dest
     );
-
-    if (SUCCESS == status) {
-        if (settings_frame_err) {
-            gtk_label_set_markup(
-                settings_label,
-                SETTINGS_LABEL_DEF_MARKUP
-            );
-            settings_frame_err = false;
-        }
-        // If the function call was unsuccessful, anything allocated to postscript_dest is freed as
-        // it aborts, so postscript_dest only needs to be freed when the call is successful
-       free(postscript_dest);
-    } else {
-        settings_frame_err = true;
-        gtk_label_set_markup(
-            settings_label,
-            SETTINGS_LABEL_ERR_MARKUP
-        );
-        fprintf(stderr, "Error: generating PostScript – received status code %d\n", status);
-    }
     /* Debugging
     fprintf(stderr, "Page Layout --\n");
     fprintf(stderr, "       rows : %d\n", page_layout->rows);
@@ -240,6 +229,116 @@ void refresh_postscript(void) {
     fprintf(stderr, "       column_width : %.2f\n", ps_properties.column_width);
     fprintf(stderr, "       fontsize     : %.2d\n\n", ps_properties.fontsize);
     */
+}
+
+/**
+ *      @brief Refreshes the barcode PostScript with the latest data
+ *      @param print_file_dest Double pointer to print file name buffer
+ *      @return SUCCESS,
+                ERR_DATA_LENGTH,
+                ERR_CHAR_INVALID,
+                ERR_INVALID_LAYOUT,
+                ERR_INVALID_CODE_SET,
+                ERR_ARGUMENT,
+                ERR_FILE_POSITION_RESET_FAILED,
+                ERR_FILE_WRITE_FAILED
+ */
+
+/**
+ *      @detail ui_hint() takes the return value of refresh_postscript() and updates the UI hint
+ *              text buffer with a message as necessary, as well as some UI modifications
+ *              (such as highlighting responsible parameters).
+ */
+int ui_hint(int err) {
+    int status = SUCCESS;
+
+    char message[UI_HINT_MAX_LEN] = "";
+    switch (err) {
+        case SUCCESS:
+            if (settings_frame_err) {
+                gtk_label_set_markup(
+                    settings_label,
+                    SETTINGS_LABEL_DEF_MARKUP
+                );
+                settings_frame_err = false;
+            }
+            break;
+        case ERR_DATA_LENGTH:
+            strncpy(message, "INTERNAL ERROR: Invalid text length\n", UI_HINT_MAX_LEN);
+            break;
+        case ERR_INVALID_CODE_SET:
+            strncpy(message, "INTERNAL ERROR: Invalid Code-128 code set\n", UI_HINT_MAX_LEN);
+            break;
+        case ERR_ARGUMENT:
+            strncpy(message, "INTERNAL ERROR: Argument error\n", UI_HINT_MAX_LEN);
+            break;
+        case ERR_FILE_POSITION_RESET_FAILED:
+            strncpy(
+                message,
+                "INTERNAL ERROR: Could not reset file position – no PostScript written\n",
+                UI_HINT_MAX_LEN
+            );
+            break;
+        case ERR_FILE_WRITE_FAILED:
+            strncpy(
+                message,
+                "INTERNAL ERROR: Could not write to file – no PostScript written\n",
+                UI_HINT_MAX_LEN
+            );
+            break;
+        case ERR_CHAR_INVALID:
+            strncpy(
+                message,
+                "Invalid character: Text includes an invalid character – please remove before"
+                    " regenerating\n",
+                UI_HINT_MAX_LEN
+            );
+            break;
+        case ERR_INVALID_LAYOUT:
+            strncpy(message, "Invalid layout: Number of rows and columns does not match the number of barcodes", UI_HINT_MAX_LEN);
+            // Update UI with red around layout boxes to indicate invalid rows / columns if they're invalid
+            settings_frame_err = true;
+            gtk_label_set_markup(
+                settings_label,
+                SETTINGS_LABEL_ERR_MARKUP
+            );
+            break;
+        default:
+            snprintf(
+                message,
+                UI_HINT_MAX_LEN,
+                "UNKNOWN ERROR: Received unknown error code: %d\n",
+                err
+            );
+            break;
+    }
+
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(ui_hint_text_buffer), message, -1);
+
+    return status;
+}
+
+/**
+ *      @detail print_button_clicked() regenerates the PostScript output and calls do_print()
+ *      @see do_print()
+ */
+void print_button_clicked(GtkButton *button, gpointer user_data) {
+    int ps_status, ui_status, print_status;
+    char* print_file_dest = NULL;
+    ps_status = refresh_postscript(&print_file_dest);
+
+    // Update UI hints based on output value
+    ui_status = ui_hint(ps_status);
+    if (SUCCESS == ps_status && SUCCESS == ui_status) {
+        print_status = do_print(print_file_dest);
+    }
+
+    free(print_file_dest);
+}
+
+int do_print(char *ps_filename) {
+
+    return SUCCESS;
 }
 
 /* Ignore all unused parameter warnings, as the function signature must be accepted by GTK
@@ -407,7 +506,7 @@ void spin_button_value_changed(GtkSpinButton *button, int *id) {
     int    _id;
     size_t btn_name_size = sizeof(char) * WIDGET_ID_MAXLEN;
     char * btn_name      = calloc(1, btn_name_size);
-    VERIFY_NULL_G(btn_name, btn_name_size);
+    VERIFY_NULL_BC(btn_name, btn_name_size);
     strncpy(btn_name, gtk_widget_get_name(GTK_WIDGET(button)), WIDGET_ID_MAXLEN);
 
     // status in this case is the number of variables filled by sscanf()
@@ -433,7 +532,7 @@ int barcode_entry_focus_out(GtkEntry *entry, GdkEvent event, int *id) {
     int    _id;
     size_t entry_name_size = sizeof(char) * WIDGET_ID_MAXLEN;
     char * entry_name      = calloc(1, entry_name_size);
-    VERIFY_NULL_G(entry_name, entry_name_size);
+    VERIFY_NULL_BC(entry_name, entry_name_size);
     strncpy(entry_name, gtk_widget_get_name(GTK_WIDGET(entry)), WIDGET_ID_MAXLEN);
 
     // status in this case is the number of variables filled by sscanf()

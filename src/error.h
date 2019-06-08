@@ -30,14 +30,16 @@
 /*@{*/
 // clang-format off
 #define SUCCESS                             0
+// start at 10 so we don't conflict with barcode.h errors
 #define ERR_GENERIC                         1
-#define ERR_WIDGET_NOT_FOUND                2
-#define ERR_NO_WIDGET_CHILDREN              3
-#define ERR_INVALID_STRING                  4
-#define ERR_TEMPORARY_DIR_CREATION_FAILED   5
-#define ERR_TEMPORARY_FILE_CREATION_FAILED  6
-#define ERR_CHDIR_FAILED                    7
-#define ERR_FTS_ERROR                       8
+#define ERR_WIDGET_NOT_FOUND                11
+#define ERR_NO_WIDGET_CHILDREN              12
+#define ERR_INVALID_STRING                  13
+#define ERR_TEMPORARY_FILE_CREATION_FAILED  14
+#define ERR_FILE_CLOSE_FAILED               15
+#define ERR_FILE_REMOVE_FAILED              16
+#define ERR_FILE_POSITION_RESET_FAILED      17
+#define ERR_FILE_WRITE_FAILED               18
 /*@}*/
 
 // clang-format on
@@ -48,7 +50,7 @@
  *      @param n The size of the memory allocated to the pointer (used in the error message)
  */
 // clang-format off
-#define VERIFY_NULL_G(var, n)                                                                   \
+#define VERIFY_NULL_BC(var, n)                                                                  \
     do {                                                                                        \
         if (var == NULL) {                                                                      \
             fprintf(                                                                            \

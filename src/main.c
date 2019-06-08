@@ -30,38 +30,36 @@
 /**
  *      @brief Cleaning up APIs
  */
-void cleanup(void) {
-    /*
-    int status = bk_exit();
-
-    switch (status) {
-        case SUCCESS:
-            break;
-        case ERR_CHDIR_FAILED:
-            fprintf(stderr, "ERROR: Could not change into temporary directory; files not cleaned up.\n");
-            break;
-        case ERR_FTS_ERROR:
-            fprintf(stderr, "WARNING: FTS raised an error on close.\n");
-            break;
-        default:
-            fprintf(stderr, "ERROR: Received invalid error code from bk_exit()");
-    }
-    */
-}
+void cleanup(void);
 
 int main(int argc, char **argv) {
     atexit(cleanup);
 
-    /*
     int status = bk_init();
 
-    if (ERR_TEMPORARY_DIR_CREATION_FAILED == status) {
-        fprintf(stderr, "FATAL: Could not create temporary directory, exiting.\n");
+    if (ERR_TEMPORARY_FILE_CREATION_FAILED == status) {
+        fprintf(stderr, "FATAL: Could not create temporary file, exiting.\n");
         exit(ERR_GENERIC);
     } else if (SUCCESS != status) {
         fprintf(stderr, "FATAL: Received invalid error code from bk_init()\n");
     }
-    */
 
     return g_application_run(G_APPLICATION(barcode_app_new()), argc, argv);
+}
+
+void cleanup(void) {
+   int status = bk_exit();
+
+   switch (status) {
+       case SUCCESS:
+           break;
+       case ERR_FILE_CLOSE_FAILED:
+           fprintf(stderr, "WARNING: Could not close file.\n");
+           break;
+       case ERR_FILE_REMOVE_FAILED:
+           fprintf(stderr, "ERROR: Could not remove files; files not cleaned up.\n");
+           break;
+       default:
+           fprintf(stderr, "ERROR: Received invalid error code from bk_exit()\n");
+   }
 }

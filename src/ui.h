@@ -34,6 +34,9 @@
 #define SETTINGS_LABEL_DEF_MARKUP "Page Layout"
 #define SETTINGS_LABEL_ERR_MARKUP "<span foreground=\"red\">Page Layout</span>"
 
+/*      @brief Maximum length of a UI hint message */
+#define UI_HINT_MAX_LEN 256
+
 /*      @brief (Required by GTK) BarcodeApp type macro */
 #define BARCODE_TYPE_APP barcode_app_get_type()
 
@@ -63,8 +66,25 @@ BarcodeApp *barcode_app_new(void);
 
 /**
  *      @brief Refreshes the barcode PostScript with the latest data
+ *      @param print_file_dest Double pointer to print file name buffer
+ *      @return SUCCESS,
+                ERR_DATA_LENGTH,
+                ERR_CHAR_INVALID,
+                ERR_INVALID_LAYOUT,
+                ERR_INVALID_CODE_SET,
+                ERR_ARGUMENT,
+                ERR_FILE_POSITION_RESET_FAILED,
+                ERR_FILE_WRITE_FAILED
  */
-void refresh_postscript(void);
+int refresh_postscript(char **);
+
+/**
+ *      @brief Updates the UI with a hint indicating the reason PostScript generation failed
+ *      @param err Error code from refresh_postscript()
+ *      @return TODO: Put error messages
+ *      @see refresh_postscript()
+ */
+int ui_hint(int);
 
 /**
  *      @defgroup UICallbacks Event handlers (callbacks) corresponding to certain events on specific
@@ -220,10 +240,22 @@ void spin_button_value_changed(GtkSpinButton *, int *);
  */
 int barcode_entry_focus_out(GtkEntry *, GdkEvent, int *);
 
+/**
+ *      @brief Callback when the print button is clicked
+ *      @param button The print button object
+ *      @param user_data Supplemental data (unused)
+ *      @warning This function is called automatically by GTK, so should not be called directly. Use
+ *               g_signal_emit() instead.
+ */
 void print_button_clicked(GtkButton *, gpointer);
 /*@}*/
 
-int do_print(void);
+/**
+ *      @brief Print a PostScript file
+ *      @param ps_filename Pointer to the name of a PostScript file
+ *      @return SUCCESS, TODO: fill out other return values
+ */
+int do_print(char *);
 
 /*      @brief Clean up any mess left from the UI */
 void ui_cleanup(void);

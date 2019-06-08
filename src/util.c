@@ -37,6 +37,9 @@ const char settings_frame_path[SETTINGS_FRAME_PATH_LENGTH][WIDGET_ID_MAXLEN]
 const char settings_box_path[SETTINGS_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"content_box", "right_box", "settings_frame", "settings_box"};
 
+const char ui_hint_view_path[UI_HINT_VIEW_PATH_LENGTH][WIDGET_ID_MAXLEN]
+    = {"content_box", "right_box", "ui_hint_view"};
+
 const char page_layout_box_path[PAGE_LAYOUT_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"page_layout_box"};
 // clang-format on
@@ -109,7 +112,7 @@ int gtk_entry_get_text_as_double(GtkEntry *entry, double *dest) {
     int   status = SUCCESS;
     int   len    = sizeof(char) * (gtk_entry_get_max_length(entry) + 1);
     char *text   = calloc(1, len);
-    VERIFY_NULL_G(text, len);
+    VERIFY_NULL_BC(text, len);
 
     strncpy(text, gtk_entry_get_text(entry), len);
     if (isfloat(text)) {
