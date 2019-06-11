@@ -6,6 +6,9 @@ A simple GUI to [libbarcode](https://github.com/eschutz/libbarcode.git). Generat
 - GTK+ 3.24.7 or higher
 - Built with clang on Mac OS X, Borland C++ 5.5 on Windows
 
+## Development
+Run `make dev` in the root directory. This will clone and build libbarcode and link header files to include/. Build with `make ui main`.
+
 ## License
 This project is licensed under the GNU Lesser General Public License. See [LICENSE](../blob/master/LICENSE) and [COPYING.LESSER](../blob/master/COPYING.LESSER) for more information.
 

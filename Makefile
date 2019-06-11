@@ -29,6 +29,13 @@ main: ui $(MAINOBJ) $(OBJS)
 ui:
 	glib-compile-resources $(SDIR)/$(UIDIR)/barcode.gresource.xml --target=$(SDIR)/resources.c --sourcedir=$(SDIR)/$(UIDIR) --generate-source
 
+dev:
+	git clone "https://github.com/eschutz/libbarcode.git" &&	\
+	make -C libbarcode lib &&					\
+	cp libbarcode/lib/* lib &&					\
+	ln -sr libbarcode/include/* include &&				\
+	printf -- "-I/usr/local/include\n-Iinclude\n$(pkg-config --cflags gtk+-3.0 | tr ' ' '\n')" > .clang_complete
+
 debug: clean
 	docker run -v $(PWD):/home/ valgrind-docker bash -c "cd home; make clean; make main; valgrind --leak-check=yes --read-var-info=yes --track-origins=yes ./main"
 

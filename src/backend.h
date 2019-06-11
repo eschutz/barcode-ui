@@ -25,7 +25,6 @@
 #define BACKEND_H
 
 #include "barcode.h"
-#include "util.h"
 #include <stdio.h>
 
 /**

@@ -2,9 +2,16 @@ main
 main.exe
 main.tds
 .DS_Store
-build/*.o
+build/*
 !build/.gitkeep
+include/*
+!include/.gitkeep
 doc/*
 !doc/.gitkeep
 lib/*
 !lib/.gitkeep
+src/resources.c
+.clang_complete
+.*~
+compile_commands.json
+libbarcode/*

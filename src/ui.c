@@ -21,11 +21,13 @@
  *      @date 3/3/19
  */
 
-#include "backend.h"
-#include "error.h"
 #include "ui.h"
+#include "backend.h"
+#include "barcode.h"
+#include "error.h"
 #include "util.h"
 #include "win.h"
+#include "gtk/gtk.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>

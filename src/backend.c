@@ -23,6 +23,7 @@
 
 #include "backend.h"
 #include "error.h"
+#include "barcode.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
