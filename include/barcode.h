@@ -1,1 +1,0 @@
-../libbarcode/include/barcode.h
