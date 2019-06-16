@@ -32,7 +32,7 @@
  */
 /*@{*/
 #define BK_BARCODE_LENGTH                   C128_MAX_STRING_LEN
-#define BK_TEMPFILE_TEMPLATE                P_tmpdir "barcodeXXXXXX"
+#define BK_TEMPFILE_TEMPLATE                P_tmpdir "/barcodeXXXXXX"
 #define BK_TEMPFILE_TEMPLATE_SIZE           sizeof(BK_TEMPFILE_TEMPLATE) + 1
 /*@}*/
 
@@ -59,5 +59,20 @@ int bk_exit(void);
                 ERR_FILE_WRITE_FAILED
  */
 int bk_generate(char[][C128_MAX_STRING_LEN], int[], int, PSProperties *, Layout *, char **);
+
+/**
+ *      @brief Print a file to a specific printer - abstraction from platform-specific APIs
+ *      @param filename File to print
+ *      @param printer Destination printer
+ *      @return SUCCESS, TODO: fill out other return values
+ */
+int bk_print(char*, char*);
+
+/**
+ *      @brief Get a list of available printing destinations for use in bk_print()
+ *      @param printers Unallocated double pointer to char - is allocated within the function
+ *      @return SUCCESS, TODO: fill out other return values
+ */
+int bk_get_printers(char**);
 
 #endif

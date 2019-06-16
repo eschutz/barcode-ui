@@ -28,6 +28,7 @@
 #include "util.h"
 #include "win.h"
 #include "gtk/gtk.h"
+#include "gtk/gtkunixprint.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -234,19 +235,6 @@ int refresh_postscript(char **print_file_dest) {
 }
 
 /**
- *      @brief Refreshes the barcode PostScript with the latest data
- *      @param print_file_dest Double pointer to print file name buffer
- *      @return SUCCESS,
-                ERR_DATA_LENGTH,
-                ERR_CHAR_INVALID,
-                ERR_INVALID_LAYOUT,
-                ERR_INVALID_CODE_SET,
-                ERR_ARGUMENT,
-                ERR_FILE_POSITION_RESET_FAILED,
-                ERR_FILE_WRITE_FAILED
- */
-
-/**
  *      @detail ui_hint() takes the return value of refresh_postscript() and updates the UI hint
  *              text buffer with a message as necessary, as well as some UI modifications
  *              (such as highlighting responsible parameters).
@@ -320,6 +308,40 @@ int ui_hint(int err) {
     return status;
 }
 
+int do_print(char *filename) {
+    int status = SUCCESS;
+
+    status = bk_print(filename, NULL);
+    
+    /* fprintf(stderr, "Printing!\n"); */
+    
+    /* GtkPrintSettings *      settings = gtk_print_settings_new(); */
+    /* GtkPrintOperation *     print; */
+    /* GtkPrintOperationResult res; */
+    /* GtkPrintJob *           job; */
+    /* GtkPageSetup *          setup; */
+
+    /* print = gtk_print_operation_new(); */
+    /* setup = gtk_print_operation_get_default_page_setup(print); */
+    /* gtk_print_settings_set_default_source(settings, filename); */
+    /* gtk_print_operation_set_print_settings(print, settings); */
+
+    /* /\* res = gtk_print_operation_run(print, GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG, GTK_WINDOW(win), NULL); *\/ */
+
+    /* /\* if (res == GTK_PRINT_OPERATION_RESULT_APPLY) { *\/ */
+    /* /\*     if (settings != NULL) { *\/ */
+    /* /\*         g_object_unref(settings); *\/ */
+    /* /\*     } *\/ */
+    /* /\*     settings = g_object_ref(gtk_print_operation_get_print_settings(print)); *\/ */
+    /* /\* } *\/ */
+    /* /\* g_object_unref(print); *\/ */
+
+    /* gtk_print_job_new("Print 1", gtk_print_settings_get_printer(settings), settings, setup); */
+    /* gtk_print_job_set_source_file(job, filename, NULL); */
+    /* gtk_print_job_send(job, NULL, NULL, NULL); */
+    return status;
+}
+
 /**
  *      @detail print_button_clicked() regenerates the PostScript output and calls do_print()
  *      @see do_print()
@@ -338,10 +360,6 @@ void print_button_clicked(GtkButton *button, gpointer user_data) {
     free(print_file_dest);
 }
 
-int do_print(char *ps_filename) {
-
-    return SUCCESS;
-}
 
 /* Ignore all unused parameter warnings, as the function signature must be accepted by GTK
    regardless of whether we use all the parameters or not */

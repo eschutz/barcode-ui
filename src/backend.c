@@ -24,10 +24,12 @@
 #include "backend.h"
 #include "error.h"
 #include "barcode.h"
+#include "gtk/gtk.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 #include <setjmp.h>
 
 static FILE * bk_tempfile;
@@ -166,13 +168,14 @@ int bk_generate(
         postscript_allocated = true;
 
         // reset file position to 0
-        if (SUCCESS != fseek(bk_tempfile, 0, SEEK_SET)) {
+        if (SUCCESS != fseek(bk_tempfile, 0L, SEEK_SET)) {
             status = ERR_FILE_POSITION_RESET_FAILED;
             longjmp(env, status);
         }
 
+        int no_bytes;
         // fprintf returns negative when an error occurs
-        if (fprintf(bk_tempfile, "%s", postscript_dest) < 0) {
+        if ((no_bytes = fprintf(bk_tempfile, "%s", postscript_dest)) < 0) {
             status = ERR_FILE_WRITE_FAILED;
             longjmp(env, status);
         }
@@ -196,5 +199,31 @@ int bk_generate(
     free(barcode_structs);
 
 
+    return status;
+}
+
+/**
+ *      @brief Print a file to a specific printer - abstraction from platform-specific APIs
+ *      @param file File to print
+ *      @param printer Destination printer
+ *      @return SUCCESS, TODO: fill out other return values
+ */
+int bk_print(char* filename, char* printer) {
+    int status = SUCCESS;
+    if (fork() == 0) {
+        execlp("lp", "-t", filename, filename, NULL);
+    }
+    return 0;
+}
+
+/**
+ *      @detail Uses @c wmic (?) on Windows and @c lpstat otherwise
+ */
+int bk_get_printers(char** printers) {
+    int status = SUCCESS;
+
+    /*
+     * Utilising fork(), exec(), and pipe() to grab output from lpstat -v or wmic
+     */
     return status;
 }

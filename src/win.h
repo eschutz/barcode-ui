@@ -27,7 +27,7 @@
 #include "ui.h"
 
 /*      @brief Template source file for the user interface */
-#define TEMPLATE_FILE "/Users/Elijah/Documents/Programs/C/barcode-ui/src/ui/window.ui"
+#define TEMPLATE_FILE "/ui/window.ui"
 
 /**
  *      @defgroup UIProperties Macros governing the user interface – duplicated from the template

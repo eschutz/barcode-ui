@@ -87,6 +87,13 @@ int refresh_postscript(char **);
 int ui_hint(int);
 
 /**
+ *      @brief Print a PostScript file
+ *      @param ps_filename Pointer to the name of a PostScript file
+ *      @return SUCCESS, TODO: fill out other return values
+ */
+int do_print(char *);
+
+/**
  *      @defgroup UICallbacks Event handlers (callbacks) corresponding to certain events on specific
  *                UI elements.
  *      @detail Each function is named [element name]_[event], where the element name and event are
@@ -249,13 +256,6 @@ int barcode_entry_focus_out(GtkEntry *, GdkEvent, int *);
  */
 void print_button_clicked(GtkButton *, gpointer);
 /*@}*/
-
-/**
- *      @brief Print a PostScript file
- *      @param ps_filename Pointer to the name of a PostScript file
- *      @return SUCCESS, TODO: fill out other return values
- */
-int do_print(char *);
 
 /*      @brief Clean up any mess left from the UI */
 void ui_cleanup(void);
