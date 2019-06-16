@@ -14,4 +14,4 @@ src/resources.c
 .clang_complete
 .*~
 compile_commands.json
-libbarcode/*
+libbarcode

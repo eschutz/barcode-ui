@@ -32,9 +32,9 @@ ui:
 
 dev:
 	git clone "https://github.com/eschutz/libbarcode.git" &&	\
-	make -C libbarcode lib &&					\
-	cp libbarcode/lib/* lib &&					\
-	ln -sr libbarcode/include/* include &&				\
+	make -C libbarcode clean lib &&									\
+	cp -r libbarcode/lib/ lib &&									\
+	cp -r libbarcode/include/ include &&			\
 	printf -- "-I/usr/local/include\n-Iinclude\n$(pkg-config --cflags gtk+-3.0 | tr ' ' '\n')" > .clang_complete
 
 debug:
