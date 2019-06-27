@@ -167,16 +167,21 @@ int bk_generate(
 
         postscript_allocated = true;
 
-        // reset file position to 0
-        if (SUCCESS != fseek(bk_tempfile, 0L, SEEK_SET)) {
-            status = ERR_FILE_POSITION_RESET_FAILED;
+        // wipe file completely
+        if (NULL == freopen(bk_tempfile_path, "w", bk_tempfile)) {
+            status = ERR_FILE_RESET_FAILED;
             longjmp(env, status);
         }
 
-        int no_bytes;
         // fprintf returns negative when an error occurs
-        if ((no_bytes = fprintf(bk_tempfile, "%s", postscript_dest)) < 0) {
+        if (fprintf(bk_tempfile, "%s", postscript_dest) < 0) {
             status = ERR_FILE_WRITE_FAILED;
+            longjmp(env, status);
+        }
+
+        // ensure everything is written to file since we're keeping it open
+        if (fflush(bk_tempfile) != SUCCESS) {
+            status = ERR_FLUSH;
             longjmp(env, status);
         }
 
@@ -210,20 +215,80 @@ int bk_generate(
  */
 int bk_print(char* filename, char* printer) {
     int status = SUCCESS;
-    if (fork() == 0) {
-        execlp("lp", "-t", filename, filename, NULL);
+    int pid = fork();
+    if (pid == 0) {
+        execlp("lp", "lp", "-d", printer, "-t", filename, filename, NULL);
+    } else if (pid == -1) {
+        fprintf(stderr, "ERROR: could not start printing subprocess");
+        status = ERR_FORK;
     }
-    return 0;
+    return status;
 }
 
 /**
  *      @detail Uses @c wmic (?) on Windows and @c lpstat otherwise
  */
-int bk_get_printers(char** printers) {
+int bk_get_printers(char*** printers, int *num_printers) {
     int status = SUCCESS;
+    char *printer_addrs[BK_MAX_PRINTERS];
+    FILE *output_stream;
+    int outputlen;
+    jmp_buf env;
+    char *output = calloc(1, BK_EXEC_BUFSIZE);
+    VERIFY_NULL_BC(output, BK_EXEC_BUFSIZE);
 
     /*
-     * Utilising fork(), exec(), and pipe() to grab output from lpstat -v or wmic
+     * Utilising popen() to grab output from lpstat -e or wmic
      */
+
+    // Get a list of printers
+    if (!setjmp(env)) {
+        if ((output_stream = popen("lpstat -e", "r")) != NULL) {
+            if ((outputlen = fread(output, sizeof *output, BK_EXEC_BUFSIZE - 1, output_stream)) > 0) {
+                output[outputlen + 1] = '\0';
+            } else {
+                fprintf(stderr, "ERROR: could not read from stream\n");
+                status = ERR_FREAD;
+                longjmp(env, status);
+            }
+            pclose(output_stream);
+        } else {
+            fprintf(stderr, "ERROR: could not get printers\n");
+            status = ERR_POPEN;
+            longjmp(env, status);
+        }
+    } else {
+        free(output);
+        return status;
+    }
+    *num_printers = 0;
+
+    // Iterate over newline-delimited printer names from lpstat -e
+    char *sep_output, *old_addr;
+    sep_output = old_addr = output;
+    while (strcmp(sep_output, "") != 0 && strsep(&sep_output, "\n") != NULL) {
+        printer_addrs[*num_printers] = old_addr;
+        old_addr = sep_output; // Output is modified in-place to point to the next line
+        (*num_printers)++;
+    }
+
+    if (*num_printers != 0) {
+        int printers_size = sizeof **printers * *num_printers;
+        *printers = calloc(1, printers_size);
+        VERIFY_NULL_BC(*printers, printers_size);
+
+        for (int i = 0; i < *num_printers; i++) {
+            int len = strlen(printer_addrs[i]) + 1; // +1 for null terminator
+            int str_size = sizeof (*printers)[i] * len;
+            (*printers)[i] = calloc(1, str_size);
+            VERIFY_NULL_BC((*printers)[i], str_size);
+            strncpy((*printers)[i], printer_addrs[i], len);
+        }
+    } else {
+        status = ERR_NO_PRINTERS;
+    }
+
+    free(output);
+    
     return status;
 }

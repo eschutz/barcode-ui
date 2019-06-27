@@ -38,8 +38,13 @@
 #define ERR_TEMPORARY_FILE_CREATION_FAILED  14
 #define ERR_FILE_CLOSE_FAILED               15
 #define ERR_FILE_REMOVE_FAILED              16
-#define ERR_FILE_POSITION_RESET_FAILED      17
+#define ERR_FILE_RESET_FAILED               17
 #define ERR_FILE_WRITE_FAILED               18
+#define ERR_POPEN                           19
+#define ERR_FREAD                           20
+#define ERR_NO_PRINTERS                     21
+#define ERR_FORK                            22
+#define ERR_FLUSH                           23
 /*@}*/
 
 // clang-format on

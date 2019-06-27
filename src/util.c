@@ -42,10 +42,13 @@ const char ui_hint_view_path[UI_HINT_VIEW_PATH_LENGTH][WIDGET_ID_MAXLEN]
 
 const char page_layout_box_path[PAGE_LAYOUT_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"page_layout_box"};
+
+const char printer_combo_box_path[PRINTER_COMBO_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN]
+= {"content_box", "right_box", "printer_box", "printer_combo_box"};
 // clang-format on
 
 /**
- *      @detail Recursively searches containers to find the widget at the search path.
+ *      @details Recursively searches containers to find the widget at the search path.
  */
 // clang-format off
 int gtk_widget_lookup_path(
@@ -81,7 +84,7 @@ int gtk_widget_lookup_path(
 }
 
 /**
- *      @detail Linear search (a small number of children is expected) through the children of a
+ *      @details Linear search (a small number of children is expected) through the children of a
  *              GTK container. This is a linked list (GList): children->data contains the child
  *              widget, children->data contains the next child.
  */
@@ -105,7 +108,7 @@ int gtk_widget_query_name(GtkContainer *container, char *name, GtkWidget **dest)
 }
 
 /**
- *      @detail Uses atof() to convert the GtkEntry text to a double (checking if it is a valid
+ *      @details Uses atof() to convert the GtkEntry text to a double (checking if it is a valid
  *              float literal first)
  */
 int gtk_entry_get_text_as_double(GtkEntry *entry, double *dest) {
@@ -125,7 +128,7 @@ int gtk_entry_get_text_as_double(GtkEntry *entry, double *dest) {
 }
 
 /**
- *      @detail Simple lexical analysis to verify if the input represents a decimal literal matching
+ *      @details Simple lexical analysis to verify if the input represents a decimal literal matching
  *              @c /[0-9](.[0-9])?/
  */
 bool isfloat(char *str) {

@@ -46,6 +46,7 @@
 #define UI_HINT_VIEW_PATH_LENGTH    3
 // Child of settings_box
 #define PAGE_LAYOUT_BOX_PATH_LENGTH 1
+#define PRINTER_COMBO_BOX_PATH_LENGTH 4
 /*@}*/
 
 /*      @brief Platform-dependent file separator */
@@ -98,6 +99,7 @@ extern const char settings_frame_path[SETTINGS_FRAME_PATH_LENGTH][WIDGET_ID_MAXL
 extern const char settings_box_path[SETTINGS_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN];
 extern const char page_layout_box_path[PAGE_LAYOUT_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN];
 extern const char ui_hint_view_path[UI_HINT_VIEW_PATH_LENGTH][WIDGET_ID_MAXLEN];
+extern const char printer_combo_box_path[PRINTER_COMBO_BOX_PATH_LENGTH][WIDGET_ID_MAXLEN];
 /*@}*/
 
 /**

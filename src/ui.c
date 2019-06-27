@@ -28,7 +28,6 @@
 #include "util.h"
 #include "win.h"
 #include "gtk/gtk.h"
-#include "gtk/gtkunixprint.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -52,6 +51,9 @@ static GtkLabel *settings_label;
 /*      @brief Global settings_box widget reference */
 static GtkWidget *settings_box;
 
+/*      @brief Global printer_combo_box widget reference */
+static GtkWidget *printer_combo_box;
+
 /*      @brief Global UI hint text buffer */
 static GtkTextBuffer *ui_hint_text_buffer;
 
@@ -67,23 +69,29 @@ static Layout *page_layout;
 /*      @brief Global list of barcodes entered via the UI */
 static char barcodes[MAX_BARCODES][BK_BARCODE_LENGTH];
 
+/*      @brief Global selected printer string */
+static char *selected_printer;
+
+/*      @brief Global selected printer length */
+static int selected_printer_length;
+
 /**
  *      @brief Global list of barcode quantities entered via the UI
- *      @detail Barcode quantities are associated such that @c barcode[n] must be printed
+ *      @details Barcode quantities are associated such that @c barcode[n] must be printed
  *              @c barcode_quantities[n] times.
  */
 static int barcode_quantities[MAX_BARCODES];
 
 /**
  *      @brief Global barcode entry identifier
- *      @detail @c barcode_entry_id represents the ID number of the last barcode entry widget
+ *      @details @c barcode_entry_id represents the ID number of the last barcode entry widget
  *              displayed in the UI. Equivalently, it represents the number of barcode entry widgets
  *              currently displayed.
  */
 static int barcode_entry_id = 0;
 
 /**
- *      @detail @c barcode_app_init is used for initialising the PostScript properties, page layout,
+ *      @details @c barcode_app_init is used for initialising the PostScript properties, page layout,
  *              and barcode quantities to their respective default values.
  */
 
@@ -109,7 +117,7 @@ static void barcode_app_init(BarcodeApp *app) {
 #pragma GCC diagnostic pop
 
 /**
- *      @detail In @c barcode_app_activate, @c barcode_entry, @c settings_box, and @c print_preview
+ *      @details In @c barcode_app_activate, @c barcode_entry, @c settings_box, and @c print_preview
  *              are initialised as @c win is initialised from the template file. Initialisation of
  *              the former three variables is achieved via the WIDGET_LOOKUP() macro.
  *      @see WIDGET_LOOKUP
@@ -134,11 +142,41 @@ static void barcode_app_activate(GApplication *app) {
 
     WIDGET_LOOKUP(win, settings_box_path, SETTINGS_BOX_PATH_LENGTH, settings_box);
 
+    WIDGET_LOOKUP(win, printer_combo_box_path, PRINTER_COMBO_BOX_PATH_LENGTH, printer_combo_box);
+
+    // Populate printer combo box
+    char **printers;
+    int num_printers, max_printer_len = 0;
+    int status = bk_get_printers(&printers, &num_printers);
+    if (status == SUCCESS) {
+        for (int i = 0; i < num_printers; i++) {
+            int printer_len = strlen(printers[i]);
+            if (printer_len > max_printer_len) {
+                max_printer_len = printer_len;
+            }
+            gtk_combo_box_text_insert(GTK_COMBO_BOX_TEXT(printer_combo_box), i, printers[i], printers[i]);
+        }
+        max_printer_len++; // null-terminator
+        selected_printer_length = max_printer_len;
+        selected_printer = calloc(1, selected_printer_length);
+        VERIFY_NULL_BC(selected_printer, selected_printer_length);
+        strncpy(selected_printer, printers[0], selected_printer_length);
+
+        for (int i = 0; i < num_printers; i++) {
+            free(printers[i]);
+        }
+        free(printers);
+    } else {
+        gtk_combo_box_text_insert(GTK_COMBO_BOX_TEXT(printer_combo_box), 0, NULL, "Unable to obtain available printers");
+    }
+    gtk_combo_box_set_active(GTK_COMBO_BOX(printer_combo_box), 0);
+
     new_barcode_btn_clicked(NULL, NULL);
 
     // Extract the outer settings_box flow box...
     WIDGET_LOOKUP(settings_box, page_layout_box_path, PAGE_LAYOUT_BOX_PATH_LENGTH, page_layout_box);
     // ...look up the units flow box via index...
+    
     // clang-format off
     units_box = gtk_container_get_children(
         GTK_CONTAINER(gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(page_layout_box),
@@ -180,13 +218,14 @@ BarcodeApp *barcode_app_new(void) {
         "application-id",
         "org.eschutz.barcode",
         "flags",
-        G_APPLICATION_HANDLES_OPEN, NULL
+        G_APPLICATION_HANDLES_OPEN,
+        NULL
     );
     // clang-format on
 }
 
 /**
- *      @detail refresh_postscript() is called whenever a field affecting the generated postscript
+ *      @details refresh_postscript() is called whenever a field affecting the generated postscript
  *              is updated.
  */
 int refresh_postscript(char **print_file_dest) {
@@ -216,26 +255,10 @@ int refresh_postscript(char **print_file_dest) {
         page_layout,
         print_file_dest
     );
-    /* Debugging
-    fprintf(stderr, "Page Layout --\n");
-    fprintf(stderr, "       rows : %d\n", page_layout->rows);
-    fprintf(stderr, "       cols : %d\n\n", page_layout->cols);
-    fprintf(stderr, "PostScript Properties --\n");
-    fprintf(stderr, "       units        : %s\n", ps_properties.units);
-    fprintf(stderr, "       lmargin      : %.2f\n", ps_properties.lmargin);
-    fprintf(stderr, "       rmargin      : %.2f\n", ps_properties.rmargin);
-    fprintf(stderr, "       tmargin      : %.2f\n", ps_properties.tmargin);
-    fprintf(stderr, "       bmargin      : %.2f\n", ps_properties.bmargin);
-    fprintf(stderr, "       bar_width    : %.2f\n", ps_properties.bar_width);
-    fprintf(stderr, "       bar_height   : %.2f\n", ps_properties.bar_height);
-    fprintf(stderr, "       padding      : %.2f\n", ps_properties.padding);
-    fprintf(stderr, "       column_width : %.2f\n", ps_properties.column_width);
-    fprintf(stderr, "       fontsize     : %.2d\n\n", ps_properties.fontsize);
-    */
 }
 
 /**
- *      @detail ui_hint() takes the return value of refresh_postscript() and updates the UI hint
+ *      @details ui_hint() takes the return value of refresh_postscript() and updates the UI hint
  *              text buffer with a message as necessary, as well as some UI modifications
  *              (such as highlighting responsible parameters).
  */
@@ -262,10 +285,10 @@ int ui_hint(int err) {
         case ERR_ARGUMENT:
             strncpy(message, "INTERNAL ERROR: Argument error\n", UI_HINT_MAX_LEN);
             break;
-        case ERR_FILE_POSITION_RESET_FAILED:
+        case ERR_FILE_RESET_FAILED:
             strncpy(
                 message,
-                "INTERNAL ERROR: Could not reset file position – no PostScript written\n",
+                "INTERNAL ERROR: Could not reset file contents – no PostScript written\n",
                 UI_HINT_MAX_LEN
             );
             break;
@@ -293,6 +316,8 @@ int ui_hint(int err) {
                 SETTINGS_LABEL_ERR_MARKUP
             );
             break;
+        case ERR_FLUSH:
+            strncpy(message, "INTERNAL ERROR: Could not flush output – printed barcodes may be clipped", UI_HINT_MAX_LEN);
         default:
             snprintf(
                 message,
@@ -310,40 +335,26 @@ int ui_hint(int err) {
 
 int do_print(char *filename) {
     int status = SUCCESS;
+    char *active_text = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(printer_combo_box)); // freed by GTK
 
-    status = bk_print(filename, NULL);
-    
-    /* fprintf(stderr, "Printing!\n"); */
-    
-    /* GtkPrintSettings *      settings = gtk_print_settings_new(); */
-    /* GtkPrintOperation *     print; */
-    /* GtkPrintOperationResult res; */
-    /* GtkPrintJob *           job; */
-    /* GtkPageSetup *          setup; */
+    if (active_text != NULL) {
+        strncpy(selected_printer, active_text, selected_printer_length);
+        status = bk_print(filename, selected_printer);
+    } else {
+        status = ERR_GENERIC;
+    }
 
-    /* print = gtk_print_operation_new(); */
-    /* setup = gtk_print_operation_get_default_page_setup(print); */
-    /* gtk_print_settings_set_default_source(settings, filename); */
-    /* gtk_print_operation_set_print_settings(print, settings); */
-
-    /* /\* res = gtk_print_operation_run(print, GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG, GTK_WINDOW(win), NULL); *\/ */
-
-    /* /\* if (res == GTK_PRINT_OPERATION_RESULT_APPLY) { *\/ */
-    /* /\*     if (settings != NULL) { *\/ */
-    /* /\*         g_object_unref(settings); *\/ */
-    /* /\*     } *\/ */
-    /* /\*     settings = g_object_ref(gtk_print_operation_get_print_settings(print)); *\/ */
-    /* /\* } *\/ */
-    /* /\* g_object_unref(print); *\/ */
-
-    /* gtk_print_job_new("Print 1", gtk_print_settings_get_printer(settings), settings, setup); */
-    /* gtk_print_job_set_source_file(job, filename, NULL); */
-    /* gtk_print_job_send(job, NULL, NULL, NULL); */
     return status;
 }
 
+
+/* Ignore all unused parameter warnings, as the function signature must be accepted by GTK
+   regardless of whether we use all the parameters or not */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /**
- *      @detail print_button_clicked() regenerates the PostScript output and calls do_print()
+ *      @details print_button_clicked() regenerates the PostScript output and calls do_print()
  *      @see do_print()
  */
 void print_button_clicked(GtkButton *button, gpointer user_data) {
@@ -360,14 +371,8 @@ void print_button_clicked(GtkButton *button, gpointer user_data) {
     free(print_file_dest);
 }
 
-
-/* Ignore all unused parameter warnings, as the function signature must be accepted by GTK
-   regardless of whether we use all the parameters or not */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -380,7 +385,7 @@ void rows_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -393,7 +398,7 @@ void cols_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -402,7 +407,7 @@ void units_changed(GtkComboBoxText *combo_box, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -415,7 +420,7 @@ void lmargin_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -428,7 +433,7 @@ void rmargin_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -441,7 +446,7 @@ void bmargin_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -454,7 +459,7 @@ void tmargin_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -467,7 +472,7 @@ void bar_width_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -480,7 +485,7 @@ void bar_height_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -493,7 +498,7 @@ void padding_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -506,7 +511,7 @@ void col_width_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'changed' event is emitted. The entry content needs
+ *      @details The function is called when the 'changed' event is emitted. The entry content needs
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
@@ -519,7 +524,7 @@ void fsize_changed(GtkEntry *entry, gpointer data) {
 }
 
 /**
- *      @detail The function is called when the 'value-changed' event is emitted. The spin button
+ *      @details The function is called when the 'value-changed' event is emitted. The spin button
  *              content needs to be polled and the barcode quantity updated.
  */
 void spin_button_value_changed(GtkSpinButton *button, int *id) {
@@ -541,7 +546,7 @@ void spin_button_value_changed(GtkSpinButton *button, int *id) {
 }
 
 /**
- *      @detail barcode_entry_focus_out() is called on emission of the 'focus-out' event. The
+ *      @details barcode_entry_focus_out() is called on emission of the 'focus-out' event. The
  *              barcode is read from the relevant entry and @c barcodes updated, and the print
  *              preview refreshed. This is a slightly lower-level event handler, interacting with
  *              the GdkEvent whereas all other callbacks defined in this project need less context.
@@ -567,7 +572,7 @@ int barcode_entry_focus_out(GtkEntry *entry, GdkEvent event, int *id) {
 }
 
 /**
- *      @detail new_barcode_btn_clicked() is responsible for creating a new barcode entry box and
+ *      @details new_barcode_btn_clicked() is responsible for creating a new barcode entry box and
  *              updating the UI and environment to reflect the new state.
  */
 void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
@@ -667,6 +672,9 @@ void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
     /* Update the UI with the new widgets */
     gtk_widget_show_all(barcode_box);
 
+    // Add default number of barcodes
+    barcode_quantities[barcode_entry_id] = 1;
+
     barcode_entry_id++;
 }
 
@@ -674,4 +682,5 @@ void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
 
 void ui_cleanup(void) {
     free(page_layout);
+    free(selected_printer);
 }

@@ -34,6 +34,9 @@
 #define BK_BARCODE_LENGTH                   C128_MAX_STRING_LEN
 #define BK_TEMPFILE_TEMPLATE                P_tmpdir "/barcodeXXXXXX"
 #define BK_TEMPFILE_TEMPLATE_SIZE           sizeof(BK_TEMPFILE_TEMPLATE) + 1
+#define BK_EXEC_BUFSIZE                     1024 // Hopefully 1 KB is enough to hold printer info
+/* #define BK_PRINTER_LENGTH                   127  // Enough for 8 printers, allowing for newlines */
+#define BK_MAX_PRINTERS                     8
 /*@}*/
 
 int bk_init(void);
@@ -56,7 +59,8 @@ int bk_exit(void);
                 ERR_INVALID_CODE_SET,
                 ERR_ARGUMENT,
                 ERR_FILE_POSITION_RESET_FAILED,
-                ERR_FILE_WRITE_FAILED
+                ERR_FILE_WRITE_FAILED.
+                ERR_FLUSH
  */
 int bk_generate(char[][C128_MAX_STRING_LEN], int[], int, PSProperties *, Layout *, char **);
 
@@ -64,15 +68,16 @@ int bk_generate(char[][C128_MAX_STRING_LEN], int[], int, PSProperties *, Layout 
  *      @brief Print a file to a specific printer - abstraction from platform-specific APIs
  *      @param filename File to print
  *      @param printer Destination printer
- *      @return SUCCESS, TODO: fill out other return values
+ *      @return SUCCESS, ERR_FORK
  */
 int bk_print(char*, char*);
 
 /**
  *      @brief Get a list of available printing destinations for use in bk_print()
- *      @param printers Unallocated double pointer to char - is allocated within the function
- *      @return SUCCESS, TODO: fill out other return values
+ *      @param printers Unallocated triple pointer to char - is allocated within the function
+ *      @param num_printers Destination pointer for the number of printers - the length of @c printers
+ *      @return SUCCESS, ERR_POPEN, ERR_FREAD
  */
-int bk_get_printers(char**);
+int bk_get_printers(char***, int *);
 
 #endif

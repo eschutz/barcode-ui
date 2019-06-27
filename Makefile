@@ -14,6 +14,7 @@ BARCODELIB=barcode
 INCLUDE_PATH=include
 CFLAGS=-Wall -Wextra -Wno-unused-command-line-argument -g -rdynamic -I$(INCLUDE_PATH)
 LIBS= -L$(LIBPATH) -l$(BARCODELIB)
+SUPPRESSIONS=gtk.suppression
 ifeq ($(OS),Windows_NT)
 	CC=bcc32x
 else
@@ -38,7 +39,7 @@ dev:
 	printf -- "-I/usr/local/include\n-Iinclude\n$(pkg-config --cflags gtk+-3.0 | tr ' ' '\n')" > .clang_complete
 
 debug:
-	valgrind --leak-check=yes --read-var-info=yes --track-origins=yes ./main
+	valgrind --leak-check=yes --read-var-info=yes --track-origins=yes --suppressions=$(SUPPRESSIONS) ./main
 
 all: main
 
