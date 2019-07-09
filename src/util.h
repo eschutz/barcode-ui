@@ -51,7 +51,7 @@
 
 /*      @brief Platform-dependent file separator */
 #ifdef _WIN32
-#define UTIL_FSEP "\"
+#define UTIL_FSEP "\""
 #else
 #define UTIL_FSEP "/"
 #endif
@@ -138,5 +138,9 @@ int gtk_entry_get_text_as_double(GtkEntry *, double *);
  *      @return true or false
  */
 bool isfloat(char *);
+
+#ifdef _WIN32
+char *strsep(char **, const char*);
+#endif
 
 #endif

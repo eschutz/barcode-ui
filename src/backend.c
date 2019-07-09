@@ -29,8 +29,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <unistd.h>
 #include <setjmp.h>
+
+#ifdef _WIN32
+#include <io.h>
+#include "util.h"
+#else
+#include <unistd.h>
+#endif
 
 static FILE * bk_tempfile;
 static char * bk_tempfile_path;
@@ -43,13 +49,10 @@ int bk_init(void) {
         bk_tempfile_path = calloc(1, BK_TEMPFILE_TEMPLATE_SIZE);
         VERIFY_NULL_BC(bk_tempfile_path, BK_TEMPFILE_TEMPLATE_SIZE);
 
-        // -1 to account for null terminator
-        strncpy((char*) bk_tempfile_path, BK_TEMPFILE_TEMPLATE, BK_TEMPFILE_TEMPLATE_SIZE - 1);
-
         #ifdef _WIN32
-        if (SUCCESS = _mktemp_s(bk_tempfile_path, BK_TEMPFILE_TEMPLATE_SIZE)) {
+	// See http://docwiki.embarcadero.com/RADStudio/Rio/en/Tmpnam,_wtmpnamf
+        if (NULL != tmpnam(bk_tempfile_path)) {
             bk_tempfile = fopen(bk_tempfile_path, "w");
-            tempfile_assigned = true;
             if (NULL == bk_tempfile) {
                 status = ERR_TEMPORARY_FILE_CREATION_FAILED;
                 longjmp(env, status);
@@ -59,6 +62,9 @@ int bk_init(void) {
             longjmp(env, status);
         }
         #else
+        // -1 to account for null terminator
+        strncpy((char*) bk_tempfile_path, BK_TEMPFILE_TEMPLATE, BK_TEMPFILE_TEMPLATE_SIZE - 1);
+	
         int temp_fd = mkstemp(bk_tempfile_path);
         if (-1 == temp_fd) {
             status = ERR_TEMPORARY_FILE_CREATION_FAILED;
@@ -215,13 +221,31 @@ int bk_generate(
  */
 int bk_print(char* filename, char* printer) {
     int status = SUCCESS;
+
+    #ifdef _WIN32
+    // 6 extra bytes: three for spaces, two for quotation marks, one for null terminator
+    size_t print_cmd_length = sizeof(char) * (strlen(printer) + strlen(filename) + strlen(BK_WIN_PRINT_CMD) + 6);
+    char *print_cmd = calloc(1, print_cmd_length);
+    VERIFY_NULL_BC(print_cmd, print_cmd_length);
+    
+    if (snprintf(print_cmd, print_cmd_length, "%s \"%s\" %s", BK_WIN_PRINT_CMD, printer, filename) > 0) {
+        if (SUCCESS != system(print_cmd)) {
+            fprintf(stderr, "ERROR: could not start printing subprocess\n");
+            status = ERR_SYSTEM;
+        }
+    } else {
+        fprintf(stderr, "ERROR: could not format printing command\n");
+        status = ERR_INVALID_STRING;
+    }
+    #else
     int pid = fork();
     if (pid == 0) {
         execlp("lp", "lp", "-d", printer, "-t", filename, filename, NULL);
     } else if (pid == -1) {
-        fprintf(stderr, "ERROR: could not start printing subprocess");
+        fprintf(stderr, "ERROR: could not start printing subprocess\n");
         status = ERR_FORK;
     }
+    #endif
     return status;
 }
 
@@ -243,7 +267,7 @@ int bk_get_printers(char*** printers, int *num_printers) {
 
     // Get a list of printers
     if (!setjmp(env)) {
-        if ((output_stream = popen("lpstat -e", "r")) != NULL) {
+      if ((output_stream = popen(BK_GET_PRINTER_CMD, BK_POPEN_MODE)) != NULL) {
             if ((outputlen = fread(output, sizeof *output, BK_EXEC_BUFSIZE - 1, output_stream)) > 0) {
                 output[outputlen + 1] = '\0';
             } else {
@@ -267,7 +291,13 @@ int bk_get_printers(char*** printers, int *num_printers) {
     char *sep_output, *old_addr;
     sep_output = old_addr = output;
     while (strcmp(sep_output, "") != 0 && strsep(&sep_output, "\n") != NULL) {
-        printer_addrs[*num_printers] = old_addr;
+        #ifdef _WIN32
+        // Remove 'Name' heading on Windows wmic output
+        if (strcmp(old_addr, "Name") == 0) {
+	    continue;
+        }
+	#endif
+	printer_addrs[*num_printers] = old_addr;
         old_addr = sep_output; // Output is modified in-place to point to the next line
         (*num_printers)++;
     }

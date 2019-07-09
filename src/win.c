@@ -23,6 +23,11 @@
 
 #include "win.h"
 
+#ifdef _WIN32
+#include "resources.c"
+#include "stdio.h"
+#endif
+
 /*      @brief (Required by GTK) BarcodeWindow type definition */
 G_DEFINE_TYPE(BarcodeWindow, barcode_window, GTK_TYPE_APPLICATION_WINDOW);
 
@@ -52,6 +57,7 @@ static void barcode_window_class_init(BarcodeWindowClass *class) {
     gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(class), "col_width_changed");
     gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(class), "fsize_changed");
     gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(class), "barcode_entry_focus_out");
+
 }
 
 BarcodeWindow *barcode_window_new(BarcodeApp *app) {

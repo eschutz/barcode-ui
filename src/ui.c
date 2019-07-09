@@ -230,8 +230,22 @@ BarcodeApp *barcode_app_new(void) {
  */
 int refresh_postscript(char **print_file_dest) {
     // barcode_entry_id here represents the number of barcode entry dialogues on screen
+    #ifdef _WIN32
+    size_t new_barcodes_size = sizeof(char*) * barcode_entry_id;
+    char **new_barcodes = calloc(1, new_barcodes_size);
+    VERIFY_NULL_BC(new_barcodes, new_barcodes_size);
+    size_t elem_size = sizeof(barcode[0]) * BK_BARCODE_LENGTH;
+    for (int i = 0; i < barcode_entry_id; i++) {
+        new_barcodes[i] = calloc(1, elem_size);
+        VERIFY_NULL_BC(new_barcodes[i], elem_size);
+    }
+    size_t quantities_size = sizeof(int) * barcode_entry_id;
+    int *new_barcode_quantities = calloc(1, quantities_size);
+    VERIFY_NULL_BC(new_barcode_quantities, quantities_size);
+    #else
     char new_barcodes[barcode_entry_id][BK_BARCODE_LENGTH];
     int  new_barcode_quantities[barcode_entry_id];
+    #endif
 
     // Filter out empty barcode entries
     int new_barcodes_num = 0;
@@ -247,7 +261,7 @@ int refresh_postscript(char **print_file_dest) {
 
     // bk_generate_png generates the print preview and fills print_file_name with its file path as a
     // string
-    return bk_generate(
+    int result = bk_generate(
         new_barcodes,
         new_barcode_quantities,
         new_barcodes_num,
@@ -255,6 +269,15 @@ int refresh_postscript(char **print_file_dest) {
         page_layout,
         print_file_dest
     );
+
+    #ifdef _WIN32
+    for (int i = 0; i < barcode_entry_id; i++) {
+        free(new_barcodes[i]);
+    }
+    free(new_barcodes);
+    free(new_barcode_quantities);
+    #endif
+    return result;
 }
 
 /**
