@@ -22,12 +22,14 @@
  */
 
 #include "ui.h"
+
 #include "backend.h"
 #include "barcode.h"
 #include "error.h"
+#include "gtk/gtk.h"
 #include "util.h"
 #include "win.h"
-#include "gtk/gtk.h"
+
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -37,40 +39,40 @@
 G_DEFINE_TYPE(BarcodeApp, barcode_app, GTK_TYPE_APPLICATION);
 
 /*      @brief Main global BarcodeWindow object */
-static BarcodeWindow *win;
+static BarcodeWindow * win;
 
 /*      @brief Global barcode_entry widget reference */
-static GtkWidget *barcode_entry;
+static GtkWidget * barcode_entry;
 
 /*      @brief Global settings_frame widget reference */
-static GtkWidget *settings_frame;
+static GtkWidget * settings_frame;
 
 /*      @brief Global settings_label widget (label of settings frame) reference */
-static GtkLabel *settings_label;
+static GtkLabel * settings_label;
 
 /*      @brief Global settings_box widget reference */
-static GtkWidget *settings_box;
+static GtkWidget * settings_box;
 
 /*      @brief Global printer_combo_box widget reference */
-static GtkWidget *printer_combo_box;
+static GtkWidget * printer_combo_box;
 
 /*      @brief Global UI hint text buffer */
-static GtkTextBuffer *ui_hint_text_buffer;
+static GtkTextBuffer * ui_hint_text_buffer;
 
 /*      @brief Global ui_hint_view widget reference */
-static GtkWidget *ui_hint_view;
+static GtkWidget * ui_hint_view;
 
 /*      @brief Global PostScript properties structure */
 static PSProperties ps_properties;
 
 /*      @brief Global page layout structure */
-static Layout *page_layout;
+static Layout * page_layout;
 
 /*      @brief Global list of barcodes entered via the UI */
 static char barcodes[MAX_BARCODES][BK_BARCODE_LENGTH];
 
 /*      @brief Global selected printer string */
-static char *selected_printer;
+static char * selected_printer;
 
 /*      @brief Global selected printer length */
 static int selected_printer_length;
@@ -91,8 +93,8 @@ static int barcode_quantities[MAX_BARCODES];
 static int barcode_entry_id = 0;
 
 /**
- *      @details @c barcode_app_init is used for initialising the PostScript properties, page layout,
- *              and barcode quantities to their respective default values.
+ *      @details @c barcode_app_init is used for initialising the PostScript properties, page
+ * layout, and barcode quantities to their respective default values.
  */
 
 #pragma GCC diagnostic push
@@ -100,7 +102,7 @@ static int barcode_entry_id = 0;
 
 static bool settings_frame_err = false;
 
-static void barcode_app_init(BarcodeApp *app) {
+static void barcode_app_init(BarcodeApp * app) {
     atexit(ui_cleanup);
     fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
 
@@ -123,7 +125,7 @@ static void barcode_app_init(BarcodeApp *app) {
  *              the former three variables is achieved via the WIDGET_LOOKUP() macro.
  *      @see WIDGET_LOOKUP
  */
-static void barcode_app_activate(GApplication *app) {
+static void barcode_app_activate(GApplication * app) {
     fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
     /* GTK does not allow settings default combo box values (for the 'units' property), so these are
        used as intermediate storage in looking up the units box. Flow boxes are created with
@@ -147,20 +149,21 @@ static void barcode_app_activate(GApplication *app) {
     WIDGET_LOOKUP(win, printer_combo_box_path, PRINTER_COMBO_BOX_PATH_LENGTH, printer_combo_box);
 
     // Populate printer combo box
-    char **printers;
-    int num_printers, max_printer_len = 0;
-    int status = bk_get_printers(&printers, &num_printers);
+    char ** printers;
+    int     num_printers, max_printer_len = 0;
+    int     status = bk_get_printers(&printers, &num_printers);
     if (status == SUCCESS) {
         for (int i = 0; i < num_printers; i++) {
             int printer_len = strlen(printers[i]);
             if (printer_len > max_printer_len) {
                 max_printer_len = printer_len;
             }
-            gtk_combo_box_text_insert(GTK_COMBO_BOX_TEXT(printer_combo_box), i, printers[i], printers[i]);
+            gtk_combo_box_text_insert(
+                GTK_COMBO_BOX_TEXT(printer_combo_box), i, printers[i], printers[i]);
         }
         max_printer_len++; // null-terminator
         selected_printer_length = max_printer_len;
-        selected_printer = calloc(1, selected_printer_length);
+        selected_printer        = calloc(1, selected_printer_length);
         VERIFY_NULL_BC(selected_printer, selected_printer_length);
         strncpy(selected_printer, printers[0], selected_printer_length);
 
@@ -169,7 +172,8 @@ static void barcode_app_activate(GApplication *app) {
         }
         free(printers);
     } else {
-        gtk_combo_box_text_insert(GTK_COMBO_BOX_TEXT(printer_combo_box), 0, NULL, "Unable to obtain available printers");
+        gtk_combo_box_text_insert(
+            GTK_COMBO_BOX_TEXT(printer_combo_box), 0, NULL, "Unable to obtain available printers");
     }
     gtk_combo_box_set_active(GTK_COMBO_BOX(printer_combo_box), 0);
 
@@ -178,7 +182,7 @@ static void barcode_app_activate(GApplication *app) {
     // Extract the outer settings_box flow box...
     WIDGET_LOOKUP(settings_box, page_layout_box_path, PAGE_LAYOUT_BOX_PATH_LENGTH, page_layout_box);
     // ...look up the units flow box via index...
-    
+
     // clang-format off
     units_box = gtk_container_get_children(
         GTK_CONTAINER(gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(page_layout_box),
@@ -203,19 +207,19 @@ static void barcode_app_activate(GApplication *app) {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-static void barcode_app_open(GApplication *app, GFile **files, gint n_files, const gchar *hint) {
+static void barcode_app_open(GApplication * app, GFile ** files, gint n_files, const gchar * hint) {
     fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
     barcode_app_activate(app);
 }
 #pragma GCC diagnostic pop
 
-static void barcode_app_class_init(BarcodeAppClass *class) {
+static void barcode_app_class_init(BarcodeAppClass * class) {
     fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
     G_APPLICATION_CLASS(class)->activate = barcode_app_activate;
     G_APPLICATION_CLASS(class)->open     = barcode_app_open;
 }
 
-BarcodeApp *barcode_app_new(void) {
+BarcodeApp * barcode_app_new(void) {
     fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
     // clang-format off
     return g_object_new(
@@ -233,25 +237,25 @@ BarcodeApp *barcode_app_new(void) {
  *      @details refresh_postscript() is called whenever a field affecting the generated postscript
  *              is updated.
  */
-int refresh_postscript(char **print_file_dest) {
+int refresh_postscript(char ** print_file_dest) {
     fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
-    // barcode_entry_id here represents the number of barcode entry dialogues on screen
-    #ifdef _WIN32
-    size_t new_barcodes_size = sizeof(char*) * barcode_entry_id;
-    char **new_barcodes = calloc(1, new_barcodes_size);
+// barcode_entry_id here represents the number of barcode entry dialogues on screen
+#ifdef _WIN32
+    size_t  new_barcodes_size = sizeof(char *) * barcode_entry_id;
+    char ** new_barcodes      = calloc(1, new_barcodes_size);
     VERIFY_NULL_BC(new_barcodes, new_barcodes_size);
     size_t elem_size = sizeof(new_barcodes[0]) * BK_BARCODE_LENGTH;
     for (int i = 0; i < barcode_entry_id; i++) {
         new_barcodes[i] = calloc(1, elem_size);
         VERIFY_NULL_BC(new_barcodes[i], elem_size);
     }
-    size_t quantities_size = sizeof(int) * barcode_entry_id;
-    int *new_barcode_quantities = calloc(1, quantities_size);
+    size_t quantities_size        = sizeof(int) * barcode_entry_id;
+    int *  new_barcode_quantities = calloc(1, quantities_size);
     VERIFY_NULL_BC(new_barcode_quantities, quantities_size);
-    #else
+#else
     char new_barcodes[barcode_entry_id][BK_BARCODE_LENGTH];
     int  new_barcode_quantities[barcode_entry_id];
-    #endif
+#endif
 
     // Filter out empty barcode entries
     int new_barcodes_num = 0;
@@ -267,22 +271,20 @@ int refresh_postscript(char **print_file_dest) {
 
     // bk_generate_png generates the print preview and fills print_file_name with its file path as a
     // string
-    int result = bk_generate(
-        new_barcodes,
-        new_barcode_quantities,
-        new_barcodes_num,
-        &ps_properties,
-        page_layout,
-        print_file_dest
-    );
+    int result = bk_generate(new_barcodes,
+                             new_barcode_quantities,
+                             new_barcodes_num,
+                             &ps_properties,
+                             page_layout,
+                             print_file_dest);
 
-    #ifdef _WIN32
+#ifdef _WIN32
     for (int i = 0; i < barcode_entry_id; i++) {
         free(new_barcodes[i]);
     }
     free(new_barcodes);
     free(new_barcode_quantities);
-    #endif
+#endif
     return result;
 }
 
@@ -298,10 +300,7 @@ int ui_hint(int err) {
     switch (err) {
         case SUCCESS:
             if (settings_frame_err) {
-                gtk_label_set_markup(
-                    settings_label,
-                    SETTINGS_LABEL_DEF_MARKUP
-                );
+                gtk_label_set_markup(settings_label, SETTINGS_LABEL_DEF_MARKUP);
                 settings_frame_err = false;
             }
             break;
@@ -315,49 +314,45 @@ int ui_hint(int err) {
             strncpy(message, "INTERNAL ERROR: Argument error\n", UI_HINT_MAX_LEN);
             break;
         case ERR_FILE_RESET_FAILED:
-            strncpy(
-                message,
-                "INTERNAL ERROR: Could not reset file contents – no PostScript written\n",
-                UI_HINT_MAX_LEN
-            );
+            strncpy(message,
+                    "INTERNAL ERROR: Could not reset file contents – no PostScript written\n",
+                    UI_HINT_MAX_LEN);
             break;
         case ERR_FILE_WRITE_FAILED:
-            strncpy(
-                message,
-                "INTERNAL ERROR: Could not write to file – no PostScript written\n",
-                UI_HINT_MAX_LEN
-            );
+            strncpy(message,
+                    "INTERNAL ERROR: Could not write to file – no PostScript written\n",
+                    UI_HINT_MAX_LEN);
             break;
         case ERR_CHAR_INVALID:
-            strncpy(
-                message,
-                "Invalid character: Text includes an invalid character – please remove before"
+            strncpy(message,
+                    "Invalid character: Text includes an invalid character – please remove before"
                     " regenerating\n",
-                UI_HINT_MAX_LEN
-            );
+                    UI_HINT_MAX_LEN);
             break;
         case ERR_INVALID_LAYOUT:
-            strncpy(message, "Invalid layout: Number of rows and columns does not match the number of barcodes\n", UI_HINT_MAX_LEN);
-            // Update UI with red around layout boxes to indicate invalid rows / columns if they're invalid
+            strncpy(message,
+                    "Invalid layout: Number of rows and columns does not match the number of "
+                    "barcodes\n",
+                    UI_HINT_MAX_LEN);
+            // Update UI with red around layout boxes to indicate invalid rows / columns if they're
+            // invalid
             settings_frame_err = true;
-            gtk_label_set_markup(
-                settings_label,
-                SETTINGS_LABEL_ERR_MARKUP
-            );
+            gtk_label_set_markup(settings_label, SETTINGS_LABEL_ERR_MARKUP);
             break;
         case ERR_FLUSH:
-            strncpy(message, "INTERNAL ERROR: Could not flush output – printed barcodes may be clipped\n", UI_HINT_MAX_LEN);
+            strncpy(message,
+                    "INTERNAL ERROR: Could not flush output – printed barcodes may be clipped\n",
+                    UI_HINT_MAX_LEN);
             break;
         case ERR_PRINTER_LIST:
-            snprintf(message, UI_HINT_MAX_LEN, "ERROR: Could not get list of printers - check the output of %s\n", BK_GET_PRINTER_CMD);
+            snprintf(message,
+                     UI_HINT_MAX_LEN,
+                     "ERROR: Could not get list of printers - check the output of %s\n",
+                     BK_GET_PRINTER_CMD);
             break;
         default:
             snprintf(
-                message,
-                UI_HINT_MAX_LEN,
-                "UNKNOWN ERROR: Received unknown error code: %d\n",
-                err
-            );
+                message, UI_HINT_MAX_LEN, "UNKNOWN ERROR: Received unknown error code: %d\n", err);
             break;
     }
 
@@ -366,9 +361,10 @@ int ui_hint(int err) {
     return status;
 }
 
-int do_print(char *filename) {
-    int status = SUCCESS;
-    char *active_text = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(printer_combo_box)); // freed by GTK
+int do_print(char * filename) {
+    int    status = SUCCESS;
+    char * active_text =
+        gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(printer_combo_box)); // freed by GTK
 
     if (active_text != NULL) {
         strncpy(selected_printer, active_text, selected_printer_length);
@@ -380,7 +376,6 @@ int do_print(char *filename) {
     return status;
 }
 
-
 /* Ignore all unused parameter warnings, as the function signature must be accepted by GTK
    regardless of whether we use all the parameters or not */
 #pragma GCC diagnostic push
@@ -390,10 +385,10 @@ int do_print(char *filename) {
  *      @details print_button_clicked() regenerates the PostScript output and calls do_print()
  *      @see do_print()
  */
-void print_button_clicked(GtkButton *button, gpointer user_data) {
-    int ps_status, ui_status, print_status;
-    char* print_file_dest = NULL;
-    ps_status = refresh_postscript(&print_file_dest);
+void print_button_clicked(GtkButton * button, gpointer user_data) {
+    int    ps_status, ui_status, print_status;
+    char * print_file_dest = NULL;
+    ps_status              = refresh_postscript(&print_file_dest);
 
     // Update UI hints based on output value
     ui_status = ui_hint(ps_status);
@@ -409,7 +404,7 @@ void print_button_clicked(GtkButton *button, gpointer user_data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void rows_changed(GtkEntry *entry, gpointer data) {
+void rows_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -422,7 +417,7 @@ void rows_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void cols_changed(GtkEntry *entry, gpointer data) {
+void cols_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -435,7 +430,7 @@ void cols_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void units_changed(GtkComboBoxText *combo_box, gpointer data) {
+void units_changed(GtkComboBoxText * combo_box, gpointer data) {
     strncpy(ps_properties.units, gtk_combo_box_text_get_active_text(combo_box), UNIT_ID_LEN);
 }
 
@@ -444,7 +439,7 @@ void units_changed(GtkComboBoxText *combo_box, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void lmargin_changed(GtkEntry *entry, gpointer data) {
+void lmargin_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -457,7 +452,7 @@ void lmargin_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void rmargin_changed(GtkEntry *entry, gpointer data) {
+void rmargin_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -470,7 +465,7 @@ void rmargin_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void bmargin_changed(GtkEntry *entry, gpointer data) {
+void bmargin_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -483,7 +478,7 @@ void bmargin_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void tmargin_changed(GtkEntry *entry, gpointer data) {
+void tmargin_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -496,7 +491,7 @@ void tmargin_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void bar_width_changed(GtkEntry *entry, gpointer data) {
+void bar_width_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -509,7 +504,7 @@ void bar_width_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void bar_height_changed(GtkEntry *entry, gpointer data) {
+void bar_height_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -522,7 +517,7 @@ void bar_height_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void padding_changed(GtkEntry *entry, gpointer data) {
+void padding_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -535,7 +530,7 @@ void padding_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void col_width_changed(GtkEntry *entry, gpointer data) {
+void col_width_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -548,7 +543,7 @@ void col_width_changed(GtkEntry *entry, gpointer data) {
  *              to be polled and the relevant structure updated (page layout, PostScript properties,
  *              barcodes and barcode quantities).
  */
-void fsize_changed(GtkEntry *entry, gpointer data) {
+void fsize_changed(GtkEntry * entry, gpointer data) {
     double value;
     int    status = gtk_entry_get_text_as_double(entry, &value);
     if (status == SUCCESS) {
@@ -560,7 +555,7 @@ void fsize_changed(GtkEntry *entry, gpointer data) {
  *      @details The function is called when the 'value-changed' event is emitted. The spin button
  *              content needs to be polled and the barcode quantity updated.
  */
-void spin_button_value_changed(GtkSpinButton *button, int *id) {
+void spin_button_value_changed(GtkSpinButton * button, int * id) {
     int    _id;
     size_t btn_name_size = sizeof(char) * WIDGET_ID_MAXLEN;
     char * btn_name      = calloc(1, btn_name_size);
@@ -586,7 +581,7 @@ void spin_button_value_changed(GtkSpinButton *button, int *id) {
  *              This function signature is required by GTK, so the GdkEvent parameter is unused, but
  *              the event is propagated to be caught by a lower-level handler.
  */
-int barcode_entry_focus_out(GtkEntry *entry, GdkEvent event, int *id) {
+int barcode_entry_focus_out(GtkEntry * entry, GdkEvent event, int * id) {
     int    _id;
     size_t entry_name_size = sizeof(char) * WIDGET_ID_MAXLEN;
     char * entry_name      = calloc(1, entry_name_size);
@@ -608,7 +603,7 @@ int barcode_entry_focus_out(GtkEntry *entry, GdkEvent event, int *id) {
  *      @details new_barcode_btn_clicked() is responsible for creating a new barcode entry box and
  *              updating the UI and environment to reflect the new state.
  */
-void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
+void new_barcode_btn_clicked(GtkButton * button, gpointer user_data) {
     // Disable creating new barcodes after the barcode limit is reached
     if (barcode_entry_id >= MAX_BARCODES) {
         gtk_widget_set_sensitive(GTK_WIDGET(button), FALSE);
@@ -618,7 +613,7 @@ void new_barcode_btn_clicked(GtkButton *button, gpointer user_data) {
     GtkWidget *barcode_box, *new_entry, *spin_btn;
 
     // Adjustment settings for the spin button
-    GtkAdjustment *adjustment;
+    GtkAdjustment * adjustment;
 
     /* The following are ID strings for their respective widgets, and are set from format templates
        that contain the numerical ID */

@@ -62,7 +62,7 @@ static void barcode_app_open(GApplication *, GFile **, gint, const gchar *);
 static void barcode_app_class_init(BarcodeAppClass *);
 
 /*      @brief (Required by GTK) Create a new BarcodeApp */
-BarcodeApp *barcode_app_new(void);
+BarcodeApp * barcode_app_new(void);
 
 /**
  *      @brief Refreshes the barcode PostScript with the latest data

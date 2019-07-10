@@ -21,9 +21,11 @@
  *      @date 23/3/19
  */
 
+#include "util.h"
+
 #include "backend.h"
 #include "error.h"
-#include "util.h"
+
 #include <ctype.h>
 #include <stdbool.h>
 
@@ -59,10 +61,10 @@ int gtk_widget_lookup_path(
 ) {
     // clang-format on
 
-    GtkContainer *parent = container;
+    GtkContainer * parent = container;
     for (int i = 0; i < pathlen; i++) {
-        GtkWidget *child;
-        int        status = gtk_widget_query_name(parent, path[i], &child);
+        GtkWidget * child;
+        int         status = gtk_widget_query_name(parent, path[i], &child);
 
         if (SUCCESS != status) {
             return status;
@@ -88,15 +90,15 @@ int gtk_widget_lookup_path(
  *              GTK container. This is a linked list (GList): children->data contains the child
  *              widget, children->data contains the next child.
  */
-int gtk_widget_query_name(GtkContainer *container, char *name, GtkWidget **dest) {
-    GList *children = gtk_container_get_children(container);
+int gtk_widget_query_name(GtkContainer * container, char * name, GtkWidget ** dest) {
+    GList * children = gtk_container_get_children(container);
 
     do {
         if (NULL == children) {
             return ERR_WIDGET_NOT_FOUND;
         }
 
-        GtkWidget *widget = children->data;
+        GtkWidget * widget = children->data;
         if (strcmp(gtk_widget_get_name(widget), name) == 0) {
             *dest = widget;
             return SUCCESS;
@@ -111,10 +113,10 @@ int gtk_widget_query_name(GtkContainer *container, char *name, GtkWidget **dest)
  *      @details Uses atof() to convert the GtkEntry text to a double (checking if it is a valid
  *              float literal first)
  */
-int gtk_entry_get_text_as_double(GtkEntry *entry, double *dest) {
-    int   status = SUCCESS;
-    int   len    = sizeof(char) * (gtk_entry_get_max_length(entry) + 1);
-    char *text   = calloc(1, len);
+int gtk_entry_get_text_as_double(GtkEntry * entry, double * dest) {
+    int    status = SUCCESS;
+    int    len    = sizeof(char) * (gtk_entry_get_max_length(entry) + 1);
+    char * text   = calloc(1, len);
     VERIFY_NULL_BC(text, len);
 
     strncpy(text, gtk_entry_get_text(entry), len);
@@ -128,10 +130,11 @@ int gtk_entry_get_text_as_double(GtkEntry *entry, double *dest) {
 }
 
 /**
- *      @details Simple lexical analysis to verify if the input represents a decimal literal matching
+ *      @details Simple lexical analysis to verify if the input represents a decimal literal
+ * matching
  *              @c /[0-9](.[0-9])?/
  */
-bool isfloat(char *str) {
+bool isfloat(char * str) {
     bool decimal = false;
     int  i       = 0;
     while (str[i] != '\0') {

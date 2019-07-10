@@ -21,10 +21,11 @@
  *      @date 3/3/19
  */
 
+#include "backend.h"
 #include "error.h"
 #include "ui.h"
-#include "backend.h"
 #include "util.h"
+
 #include <stdio.h>
 
 /**
@@ -32,7 +33,7 @@
  */
 void cleanup(void);
 
-int main(int argc, char **argv) {
+int main(int argc, char ** argv) {
     fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
     atexit(cleanup);
 
@@ -49,18 +50,18 @@ int main(int argc, char **argv) {
 }
 
 void cleanup(void) {
-   int status = bk_exit();
+    int status = bk_exit();
 
-   switch (status) {
-       case SUCCESS:
-           break;
-       case ERR_FILE_CLOSE_FAILED:
-           fprintf(stderr, "WARNING: Could not close file.\n");
-           break;
-       case ERR_FILE_REMOVE_FAILED:
-           fprintf(stderr, "ERROR: Could not remove files; files not cleaned up.\n");
-           break;
-       default:
-           fprintf(stderr, "ERROR: Received invalid error code from bk_exit()\n");
-   }
+    switch (status) {
+        case SUCCESS:
+            break;
+        case ERR_FILE_CLOSE_FAILED:
+            fprintf(stderr, "WARNING: Could not close file.\n");
+            break;
+        case ERR_FILE_REMOVE_FAILED:
+            fprintf(stderr, "ERROR: Could not remove files; files not cleaned up.\n");
+            break;
+        default:
+            fprintf(stderr, "ERROR: Received invalid error code from bk_exit()\n");
+    }
 }

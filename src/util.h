@@ -26,6 +26,7 @@
 
 #include "error.h"
 #include "gtk/gtk.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,7 +141,7 @@ int gtk_entry_get_text_as_double(GtkEntry *, double *);
 bool isfloat(char *);
 
 #ifdef _WIN32
-char *strsep(char **, const char*);
+char * strsep(char **, const char *);
 #endif
 
 #endif

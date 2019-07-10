@@ -104,6 +104,6 @@ void barcode_window_open(BarcodeWindow *, GFile *);
 static void barcode_window_class_init(BarcodeWindowClass *);
 
 /*      @brief (Required by GTK) Create a new BarcodeWindow */
-BarcodeWindow *barcode_window_new(BarcodeApp *);
+BarcodeWindow * barcode_window_new(BarcodeApp *);
 
 #endif

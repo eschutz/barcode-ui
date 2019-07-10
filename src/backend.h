@@ -25,6 +25,7 @@
 #define BACKEND_H
 
 #include "barcode.h"
+
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -34,23 +35,24 @@
  *      @defgroup BackendProperties Backend properties relating to print preview generation
  */
 /*@{*/
-#define BK_BARCODE_LENGTH                   C128_MAX_STRING_LEN
+#define BK_BARCODE_LENGTH C128_MAX_STRING_LEN
 #ifdef _WIN32
-#define BK_TEMPFILE_TEMPLATE_SIZE           L_tmpnam_s
-#define BK_GET_PRINTER_CMD                  "wmic printer get name"
-#define BK_POPEN_MODE                       "rt"
-#define BK_WIN_PRINT_CMD                    "call notepad /pt"
-#define popen                               _popen
-#define pclose                              _pclose
+#define BK_TEMPFILE_TEMPLATE_SIZE L_tmpnam_s
+#define BK_GET_PRINTER_CMD "wmic printer get name"
+#define BK_POPEN_MODE "rt"
+#define BK_WIN_PRINT_CMD "call notepad /pt"
+#define popen _popen
+#define pclose _pclose
 #else
-#define BK_TEMPFILE_TEMPLATE                P_tmpdir "/barcodeXXXXXX"
-#define BK_GET_PRINTER_CMD                  "lpstat -e"
-#define BK_POPEN_MODE                       "r"
-#define BK_TEMPFILE_TEMPLATE_SIZE           sizeof(BK_TEMPFILE_TEMPLATE) + 1
+#define BK_TEMPFILE_TEMPLATE P_tmpdir "/barcodeXXXXXX"
+#define BK_GET_PRINTER_CMD "lpstat -e"
+#define BK_POPEN_MODE "r"
+#define BK_TEMPFILE_TEMPLATE_SIZE sizeof(BK_TEMPFILE_TEMPLATE) + 1
 #endif
-#define BK_EXEC_BUFSIZE                     1024 // Hopefully 1 KB is enough to hold printer info
-/* #define BK_PRINTER_LENGTH                   127  // Enough for 8 printers, allowing for newlines */
-#define BK_MAX_PRINTERS                     8
+#define BK_EXEC_BUFSIZE 1024 // Hopefully 1 KB is enough to hold printer info
+/* #define BK_PRINTER_LENGTH                   127  // Enough for 8 printers, allowing for newlines
+ */
+#define BK_MAX_PRINTERS 8
 /*@}*/
 
 int bk_init(void);
@@ -77,7 +79,7 @@ int bk_exit(void);
                 ERR_FLUSH,
                 ERR_PRINTER_LIST (Windows only)
  */
-int bk_generate(char**, int*, int, PSProperties *, Layout *, char **);
+int bk_generate(char **, int *, int, PSProperties *, Layout *, char **);
 
 /**
  *      @brief Print a file to a specific printer - abstraction from platform-specific APIs
@@ -85,14 +87,15 @@ int bk_generate(char**, int*, int, PSProperties *, Layout *, char **);
  *      @param printer Destination printer
  *      @return SUCCESS, ERR_FORK
  */
-int bk_print(char*, char*);
+int bk_print(char *, char *);
 
 /**
  *      @brief Get a list of available printing destinations for use in bk_print()
  *      @param printers Unallocated triple pointer to char - is allocated within the function
- *      @param num_printers Destination pointer for the number of printers - the length of @c printers
+ *      @param num_printers Destination pointer for the number of printers - the length of @c
+ * printers
  *      @return SUCCESS, ERR_POPEN, ERR_FREAD
  */
-int bk_get_printers(char***, int *);
+int bk_get_printers(char ***, int *);
 
 #endif
