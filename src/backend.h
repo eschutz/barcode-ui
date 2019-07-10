@@ -27,27 +27,27 @@
 #include "barcode.h"
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 /**
  *      @defgroup BackendProperties Backend properties relating to print preview generation
  */
 /*@{*/
 #define BK_BARCODE_LENGTH                   C128_MAX_STRING_LEN
 #ifdef _WIN32
-#ifndef P_tmpdir
-#define P_tmpdir                            _P_tmpdir
-#endif
-#define BK_TEMPFILE_TEMPLATE                P_tmpdir "/barcode_temp"
+#define BK_TEMPFILE_TEMPLATE_SIZE           L_tmpnam_s
 #define BK_GET_PRINTER_CMD                  "wmic printer get name"
 #define BK_POPEN_MODE                       "rt"
-#define BK_WIN_PRINT_CMD                    "notepad /pt"
+#define BK_WIN_PRINT_CMD                    "call notepad /pt"
 #define popen                               _popen
 #define pclose                              _pclose
 #else
 #define BK_TEMPFILE_TEMPLATE                P_tmpdir "/barcodeXXXXXX"
 #define BK_GET_PRINTER_CMD                  "lpstat -e"
 #define BK_POPEN_MODE                       "r"
-#endif
 #define BK_TEMPFILE_TEMPLATE_SIZE           sizeof(BK_TEMPFILE_TEMPLATE) + 1
+#endif
 #define BK_EXEC_BUFSIZE                     1024 // Hopefully 1 KB is enough to hold printer info
 /* #define BK_PRINTER_LENGTH                   127  // Enough for 8 printers, allowing for newlines */
 #define BK_MAX_PRINTERS                     8
@@ -73,10 +73,11 @@ int bk_exit(void);
                 ERR_INVALID_CODE_SET,
                 ERR_ARGUMENT,
                 ERR_FILE_POSITION_RESET_FAILED,
-                ERR_FILE_WRITE_FAILED.
-                ERR_FLUSH
+                ERR_FILE_WRITE_FAILED,
+                ERR_FLUSH,
+                ERR_PRINTER_LIST (Windows only)
  */
-int bk_generate(char[][C128_MAX_STRING_LEN], int[], int, PSProperties *, Layout *, char **);
+int bk_generate(char**, int*, int, PSProperties *, Layout *, char **);
 
 /**
  *      @brief Print a file to a specific printer - abstraction from platform-specific APIs

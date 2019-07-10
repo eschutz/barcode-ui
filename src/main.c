@@ -33,6 +33,7 @@
 void cleanup(void);
 
 int main(int argc, char **argv) {
+    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
     atexit(cleanup);
 
     int status = bk_init();

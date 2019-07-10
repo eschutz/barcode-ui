@@ -46,6 +46,7 @@
 #define ERR_FORK                            22
 #define ERR_FLUSH                           23
 #define ERR_SYSTEM                          24
+#define ERR_PRINTER_LIST                    25
 /*@}*/
 
 // clang-format on

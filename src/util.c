@@ -27,10 +27,6 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#if _WIN32
-#include <string.h>
-#endif
-
 // clang-format off
 const char barcode_entry_path[BARCODE_ENTRY_PATH_LENGTH][WIDGET_ID_MAXLEN]
     = {"content_box", "barcode_entry_box"};
@@ -152,15 +148,3 @@ bool isfloat(char *str) {
     };
     return true;
 }
-
-
-#if _WIN32
-char * strsep(char ** stringp, const char * delim) {
-    if (*stringp != NULL && (*stringp = strpbrk(*stringp, delim)) != NULL) {
-        *stringp = '\0';
-        (*stringp)++;
-    }
-
-    return *stringp;
-}
-#endif
