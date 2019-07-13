@@ -4,8 +4,9 @@ main.tds
 .DS_Store
 src/resources.c
 .clang_complete
-.*~
+*.*~
+.#*
 compile_commands.json
 libbarcode
-barcode-x86-*.exe
-barcode-x64-*.exe
+barcode-x86-*.bat
+barcode-x64-*.bat
