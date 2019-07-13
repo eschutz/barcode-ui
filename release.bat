@@ -7,7 +7,6 @@ SET OUTPUT_NAME=barcode-%TARGET%-%VER%
 
 call winbuild.bat
 
-echo start /MIN "bin\%TARGET%\barcode.exe" > %OUTPUT_NAME%.bat
-echo exit >> %OUTPUT_NAME%.bat
+echo start /MIN "" "bin\%TARGET%\barcode.exe" > %OUTPUT_NAME%.bat
 
-call PowerShell -NoLogo -NonInteractive -Command "Compress-Archive -Path %OUTPUT_NAME%.exe, LICENSE, LICENSE-THIRD-PARTY, bin, share, etc, include -CompressionLevel Optimal -Update -DestinationPath release\%OUTPUT_NAME%.zip"
+call PowerShell -NoLogo -NonInteractive -Command "Compress-Archive -Path %OUTPUT_NAME%.bat, LICENSE, LICENSE-THIRD-PARTY, bin, share, etc, include -CompressionLevel Optimal -Update -DestinationPath release\%OUTPUT_NAME%.zip"
