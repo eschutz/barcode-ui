@@ -24,6 +24,13 @@ Run `make dev` in the root directory. This will clone and build libbarcode and c
 Run `.\windev.bat` in the root directory to get started. Run `.\winbuild.bat` to
 build the project.
 
+On Windows systems, there are two target architectures available: x86 or x64.
+The default architecture is set to x86 (see `TARGET` in `winbuild.bat`).
+The resulting executable is written to `bin\<architecture>\barcode.exe`.
+
+To produce an archive for distribution, run `.\release.bat`.
+This produces a distributable zip archive located in `release\barcode.zip`.
+
 ## License
 This project is licensed under the Mozilla Public License Version 2.0. See
 [LICENSE](../blob/master/LICENSE) for more information.
@@ -53,6 +60,9 @@ follows:
 | [PCRE](https://www.pcre.org/) | PCRE2 license |
 | [zlib](https://zlib.net/) | zlib license |
 
+A [Windows-10](https://github.com/B00merang-Project/Windows-10) GTK theme is bundled with the project,
+[GhostScript](https://www.ghostscript.com/download/gsdnld.html) is utilised for printing.
+
 Please see [LICENSE-THIRD-PARTY](../blob/master/LICENSE-THIRD-PARTY) for
 copyright notices and copies of licenses.
 
@@ -61,7 +71,7 @@ copyright notices and copies of licenses.
 - [x] Add callback functions for ps properties
 - [ ] Add preview generation function
 - [x] Add printing:
-  - [ ] Printing via on Windows and `lp` on Unix
+  - [x] Printing via GhostScript on Windows and `lp` on Unix
   - [x] Printer selection drop-down list
-- [ ] Ensure windows builds and runs
-- [ ] Docs
+- [x] Ensure windows builds and runs
+- [x] Docs

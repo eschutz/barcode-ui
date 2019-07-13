@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Elijah Schutz */
+/* Copyright © 2019 Elijah Schutz */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,7 +35,7 @@ static FILE * bk_tempfile;
 static char * bk_tempfile_path;
 
 int bk_init(void) {
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     jmp_buf env;
     int     status = SUCCESS;
 
@@ -75,7 +75,7 @@ int bk_init(void) {
         free(bk_tempfile_path);
     }
 
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     return status;
 }
 
@@ -111,7 +111,7 @@ int bk_generate(
     Layout * layout,
     char ** ps_name_ptr
 ) {
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     // clang-format on
 
     char *     postscript_dest;
@@ -134,7 +134,7 @@ int bk_generate(
                 total_barcodes++;
             }
         }
-        // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
         barcode_structs_size = sizeof *barcode_structs * total_barcodes;
 
         barcode_structs = calloc(1, barcode_structs_size);
@@ -155,7 +155,7 @@ int bk_generate(
                 status = c128_encode((uchar *) barcodes[barcode_no],
                                      strlen(barcodes[barcode_no]),
                                      &barcode_structs[num_allocated]);
-                // fprintf(stderr, "Successfully reached %s:%d %s(), loop %d:%d\n", __FILE__,
+
                 // __LINE__, __func__, barcode_no, barcode_idx);
                 if (status != SUCCESS) {
                     longjmp(env, status);
@@ -163,11 +163,11 @@ int bk_generate(
                 num_allocated++;
             }
         }
-        // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
 
         /* (iii) */
         status = c128_ps_layout(barcode_structs, total_barcodes, &postscript_dest, props, layout);
-        // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
         if (status != SUCCESS) {
             longjmp(env, status);
         }
@@ -197,7 +197,7 @@ int bk_generate(
         VERIFY_NULL_BC(*ps_name_ptr, BK_TEMPFILE_TEMPLATE_SIZE);
 
         strncpy(*ps_name_ptr, bk_tempfile_path, BK_TEMPFILE_TEMPLATE_SIZE);
-        // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     }
 
     if (postscript_allocated) {
@@ -209,7 +209,7 @@ int bk_generate(
         free(barcode_structs[i]);
     }
     free(barcode_structs);
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
 
     return status;
 }
@@ -221,38 +221,50 @@ int bk_generate(
  *      @return SUCCESS, TODO: fill out other return values
  */
 int bk_print(char * filename, char * printer) {
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     int status = SUCCESS;
 
 #ifdef _WIN32
-    // 6 extra bytes: three for spaces, four for quotation marks, one for null terminator
-    size_t print_cmd_length =
-        sizeof(char) * (strlen(printer) + strlen(filename) + strlen(BK_WIN_PRINT_CMD) + 8);
+    // 1 for null terminator
+    size_t initial_print_cmd_length = sizeof(char) * (strlen(BK_WIN_PRINT_CMD) + strlen(printer) + 1);
+    // 4 extra bytes: one for whitespace, two for quotation marks, one for null terminator
+    size_t final_print_cmd_length = sizeof(char) * (strlen(filename) + 4);
+    size_t print_cmd_length = initial_print_cmd_length + final_print_cmd_length;
+
     char * print_cmd = calloc(1, print_cmd_length);
     VERIFY_NULL_BC(print_cmd, print_cmd_length);
 
-    fprintf(stderr, "%d\n", print_cmd_length);
-    if (snprintf(print_cmd,
-                 print_cmd_length - 1,
-                 "%s \"%s\" \"%s\"",
-                 BK_WIN_PRINT_CMD,
-                 filename,
-                 printer) > 0) {
-        fprintf(stderr, "Print command: %s\n", print_cmd);
-        fprintf(stderr, "Print exec: %s\n", BK_WIN_PRINT_CMD);
-        fprintf(stderr, "Printer: %s\n", printer);
-        fprintf(stderr, "Filename: %s\n", filename);
-        for (int i = 0; i < print_cmd_length; i++) {
-            fprintf(stderr, "%d, ", (int) print_cmd[i]);
+    // Firstly format the printer name into the printing command string
+    // This works differently from the Unix version, see BK_WIN_PRINT_CMD (backend.h)
+    // for details.
+    if ((snprintf(print_cmd, initial_print_cmd_length, BK_WIN_PRINT_CMD, printer) > 0)) {
+        char * filename_buffer = calloc(1, final_print_cmd_length);
+        VERIFY_NULL_BC(filename_buffer, final_print_cmd_length);
+
+        if (snprintf(filename_buffer, final_print_cmd_length, " \"%s\"", filename) > 0) {
+            strncat(print_cmd, filename_buffer, final_print_cmd_length);
+            
+            fprintf(stderr, "Print command: %s\n", print_cmd);
+            fprintf(stderr, "Print exec: %s\n", BK_WIN_PRINT_CMD);
+            fprintf(stderr, "Printer: %s\n", printer);
+            fprintf(stderr, "Filename: %s\n", filename);
+            for (int i = 0; i < print_cmd_length; i++) {
+                fprintf(stderr, "%d, ", (int) print_cmd[i]);
+            }
+            if (SUCCESS != system(print_cmd)) {
+                fprintf(stderr, "ERROR: could not start printing subprocess\n");
+                status = ERR_SYSTEM;
+            }
+        } else {
+            fprintf(stderr, "ERROR: could not format filename for printing\n");
+            status = ERR_INVALID_STRING;
         }
-        if (SUCCESS != system(print_cmd)) {
-            fprintf(stderr, "ERROR: could not start printing subprocess\n");
-            status = ERR_SYSTEM;
-        }
+        free(filename_buffer);
     } else {
         fprintf(stderr, "ERROR: could not format printing command\n");
         status = ERR_INVALID_STRING;
     }
+    free(print_cmd);
 #else
     int pid = fork();
     if (pid == 0) {
@@ -262,7 +274,7 @@ int bk_print(char * filename, char * printer) {
         status = ERR_FORK;
     }
 #endif
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     return status;
 }
 
@@ -277,7 +289,7 @@ int bk_get_printers(char *** printers, int * num_printers) {
     jmp_buf env;
     char *  output = calloc(1, BK_EXEC_BUFSIZE);
     VERIFY_NULL_BC(output, BK_EXEC_BUFSIZE);
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
 
     /*
      * Utilising popen() to grab output from lpstat -e or wmic
@@ -309,27 +321,27 @@ int bk_get_printers(char *** printers, int * num_printers) {
     // Iterate over newline-delimited printer names from lpstat -e
     char * sep_output;
     sep_output = output;
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
 
 #ifdef _WIN32
     char * context;
+    char * current_printer;
     if (NULL != strtok_s(sep_output, "\n", &context)) {
         // Run again to remove 'Name' heading on Windows wmic output
         while (NULL != (sep_output = strtok_s(NULL, "\r\n", &context))) {
-            // Note this assumes that if the printer name starts with whitespace, then the whole
-            // thing is whitespace This helps remove the whitespace at the end of wmic output
-            // without having to loop through the whole string I think it is a reasonable
-            // expectation that one would not begin a printer name with a space
-            if (0 != strcmp(sep_output, "") && !isspace(sep_output[0])) {
-                printer_addrs[*num_printers] =
-                    sep_output; // Output is modified in-place to point to the next line
+            current_printer = strstrip(sep_output); // This must be freed later
+            if (0 != strcmp(sep_output, "")) {
+                // Output is modified in-place to point to the next line
+                printer_addrs[*num_printers] = current_printer;
                 (*num_printers)++;
             }
         }
     } else {
         fprintf(stderr, "ERROR: Invalid printer list string\n");
         status = ERR_PRINTER_LIST;
+        
         free(output);
+        
         return status;
     }
 #else
@@ -340,19 +352,24 @@ int bk_get_printers(char *** printers, int * num_printers) {
         (*num_printers)++;
     }
 #endif
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
 
     if (*num_printers != 0) {
         int printers_size = sizeof **printers * *num_printers;
+        
         *printers         = calloc(1, printers_size);
         VERIFY_NULL_BC(*printers, printers_size);
 
         for (int i = 0; i < *num_printers; i++) {
             int len        = strlen(printer_addrs[i]) + 1; // +1 for null terminator
             int str_size   = sizeof(*printers)[i] * len;
+
             (*printers)[i] = calloc(1, str_size);
             VERIFY_NULL_BC((*printers)[i], str_size);
+
             strncpy((*printers)[i], printer_addrs[i], len);
+            
+            free(printer_addrs[i]); // Allocated from current_printer above
         }
     } else {
         status = ERR_NO_PRINTERS;
@@ -360,6 +377,6 @@ int bk_get_printers(char *** printers, int * num_printers) {
 
     free(output);
 
-    // fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     return status;
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Elijah Schutz */
+/* Copyright © 2019 Elijah Schutz */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -141,3 +141,26 @@ bool isfloat(char * str) {
     };
     return true;
 }
+
+char * strstrip(char * str) {
+    size_t len = strlen(str) + 1;
+    
+    char * result = calloc(1, len);
+    VERIFY_NULL_BC(result, len);
+    strncpy(result, str, len);
+
+    int i = 0;
+    while (isspace(result[i++])); // Code golf!
+    result += i - 1;
+    
+    // Set the trailing chars to null while the end is whitespace
+    // The length must be adjusted as result has been shifted forward
+    // Note --i decrements, then returns, i
+    i = len - i;
+    while (isspace(result[--i])) {
+        result[i] = '\0';
+    }
+
+    return result;
+}
+

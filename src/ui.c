@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Elijah Schutz */
+/* Copyright © 2019 Elijah Schutz */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -94,7 +94,7 @@ static bool settings_frame_err = false;
 
 static void barcode_app_init(BarcodeApp * app) {
     atexit(ui_cleanup);
-    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
 
     ps_properties         = PS_DEFAULT_PROPS;
     barcode_quantities[0] = 1;
@@ -116,7 +116,7 @@ static void barcode_app_init(BarcodeApp * app) {
  *      @see WIDGET_LOOKUP
  */
 static void barcode_app_activate(GApplication * app) {
-    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     /* GTK does not allow settings default combo box values (for the 'units' property), so these are
        used as intermediate storage in looking up the units box. Flow boxes are created with
        indexed children, so nested flow boxes need to be looked up by name, then extracted via an
@@ -191,26 +191,26 @@ static void barcode_app_activate(GApplication * app) {
 
     // Set the default units
     gtk_combo_box_set_active_id(GTK_COMBO_BOX(combo_box), DEFAULT_UNIT);
-    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     gtk_window_present(GTK_WINDOW(win));
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 static void barcode_app_open(GApplication * app, GFile ** files, gint n_files, const gchar * hint) {
-    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     barcode_app_activate(app);
 }
 #pragma GCC diagnostic pop
 
 static void barcode_app_class_init(BarcodeAppClass * class) {
-    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     G_APPLICATION_CLASS(class)->activate = barcode_app_activate;
     G_APPLICATION_CLASS(class)->open     = barcode_app_open;
 }
 
 BarcodeApp * barcode_app_new(void) {
-    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
     // clang-format off
     return g_object_new(
         BARCODE_TYPE_APP,
@@ -228,7 +228,7 @@ BarcodeApp * barcode_app_new(void) {
  *              is updated.
  */
 int refresh_postscript(char ** print_file_dest) {
-    fprintf(stderr, "Successfully reached %s:%d %s()\n", __FILE__, __LINE__, __func__);
+
 // barcode_entry_id here represents the number of barcode entry dialogues on screen
 #ifdef _WIN32
     size_t  new_barcodes_size = sizeof(char *) * barcode_entry_id;

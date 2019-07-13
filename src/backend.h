@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Elijah Schutz */
+/* Copyright © 2019 Elijah Schutz */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,10 +27,11 @@
 /*@{*/
 #define BK_BARCODE_LENGTH C128_MAX_STRING_LEN
 #ifdef _WIN32
+#define BUILD_TARGET "x86"
 #define BK_TEMPFILE_TEMPLATE_SIZE L_tmpnam_s
 #define BK_GET_PRINTER_CMD "wmic printer get name"
 #define BK_POPEN_MODE "rt"
-#define BK_WIN_PRINT_CMD "call notepad /pt"
+#define BK_WIN_PRINT_CMD "bin\\" BUILD_TARGET "\\gswin32.exe -dBATCH -dNOPAUSE -sDEVICE=mswinpr2 -sOutputFile=\"%%printer%%%s\""
 #define popen _popen
 #define pclose _pclose
 #else

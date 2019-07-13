@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Elijah Schutz */
+/* Copyright © 2019 Elijah Schutz */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,6 +49,9 @@
 
 #define FSEP_LEN 1
 
+#define NUM_CMD_LINE_OPTS 3
+#define CMD_LINE_OPTS_LENGTH 16
+
 /*      @brief Utility macro for compile-time string length calculations (w/null terminator) */
 #define STRLEN(str) sizeof(str) / sizeof(char)
 
@@ -76,7 +79,7 @@
                 fprintf(stderr, "%s%s", path[i], (i == length - 1 ? "\n" : "->"));                 \
             }                                                                                      \
             fprintf(stderr, "failed with exit code: %d\n", status);                                \
-            exit(ERR_GENERIC);                                                                     \
+            exit(EXIT_FAILURE);                                                                    \
         }                                                                                          \
     } while (0);
 // clang-format on
@@ -130,8 +133,13 @@ int gtk_entry_get_text_as_double(GtkEntry *, double *);
  */
 bool isfloat(char *);
 
-#ifdef _WIN32
-char * strsep(char **, const char *);
-#endif
+/**
+ *      @brief Strips the whitespace from the beginning and end of a string
+ *      @param str A string to strip
+ *      @return A stripped string
+ *      @warning Memory is allocated to the return value in this function, so make sure you
+ *               free() the return value once you're done.
+ */
+char * strstrip(char *);
 
 #endif
