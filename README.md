@@ -1,3 +1,5 @@
+
+
 # barcode-ui
 A simple GUI to [libbarcode](https://github.com/eschutz/libbarcode.git). Generates barcodes in PostScript.
 
@@ -15,6 +17,9 @@ GTK binaries and headers are provided with the project.
 - pkg-config
 - GNU Make
 - Valgrind for debugging (optional)
+
+<img src="https://raw.githubusercontent.com/eschutz/barcode-ui/master/doc/barcode-window.png" width="50%" height="50%"/>
+<img src="https://raw.githubusercontent.com/eschutz/barcode-ui/master/doc/barcodes.png" width="50%" height="50%"/>
 
 ## Development
 ### Unix-compatible systems
